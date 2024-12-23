@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"></meta>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"></meta>
+    <title>CMS</title>
+    
+    <th:block th:replace="~{view/layout::css}"></th:block>
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.0.3/css/dataTables.dataTables.css" />
+
+	<style>
+		.detail-content p {
+			word-wrap: break-word;
+			overflow-wrap: break-word;
+			white-space: normal;
+		}
+	</style>
+
+</head>
+<body>
+	<div class="html-content">
+		<div class="container">
+		    <h1 class="text-center">CMS</h1>
+		    <div class="d-flex justify-content-end">
+		    	<a class="btn btn-primary me-2" th:href="@{/cms/export-excel(page=0, startDate=${startDate}, endDate=${endDate}, phone=${phone}, giftType=${giftType})}">Export Excel</a>
+			    <!--<a class="btn btn-primary" th:href="@{/config}">Config</a>-->
+		    </div>
+		    
+		    <form id="myForm" th:action="@{/cms}" method="get">
+				<div class="row justify-content-center mb-3">
+			        <div class="col-md-2">
+			            <label for="endDate" class="form-label">Phone:</label>
+			            <input id="phone" type="text" name="phone" th:value="${phone}" placeholder="Phone" class="form-control" />
+			        </div>
+			        <div class="col-md-2">
+			            <label for="startDate" class="form-label">Start Date:</label>
+			            <input id="startDate" type="date" name="startDate" th:value="${startDate}" placeholder="Start Date" class="form-control" />
+			        </div>
+			        <div class="col-md-2">
+			            <label for="endDate" class="form-label">End Date:</label>
+			            <input id="endDate" type="date" name="endDate" th:value="${endDate}" placeholder="End Date" class="form-control" />
+			        </div>
+			        <div class="col-md-2">
+			            <label for="giftType" class="form-label">Type:</label>
+				        <select id="giftType" name="giftType" th:value="${giftType}" placeholder="GiftType" class="form-select">
+							<option value="" th:selected="${giftType == ''}">No Selected</option>
+					        <option value="FBU" th:selected="${giftType == 'FBU'}">Winner</option>
+					        <option value="STARS" th:selected="${giftType == 'STARS'}">Stars</option>
+<!--					        <option value="PIECE" th:selected="${giftType == 'PIECE'}">Letter LUMITEL</option>-->
+<!--					        <option value="SAMSUNG" th:selected="${giftType == 'SAMSUNG'}">Samsung Galaxy</option>-->
+<!--					        <option value="SHARE" th:selected="${giftType == 'SHARE'}">Plus</option>-->
+<!--							<option value="UNLUCKY" th:selected="${giftType == 'UNLUCKY'}">Unlucky</option>-->
+						    <!-- Thêm các tùy chọn khác nếu cần -->
+						</select>			        
+					</div>
+					<div class="col-md-2">
+						<label for="size" class="form-label">Rows per page:</label>
+						<select id="size" name="size" th:value="${size}" placeholder="Size" class="form-select">
+							<option value="10" th:selected="${size == 10}">10</option>
+							<option value="30" th:selected="${size == 30}">30</option>
+							<option value="50" th:selected="${size == 50}">50</option>
+							<option value="100" th:selected="${size == 100}">100</option>
+							<option value="200" th:selected="${size == 200}">200</option>
+							<!-- Thêm các tùy chọn khác nếu cần -->
+						</select>
+					</div>
+			        <div class="col-md-2 align-self-end">
+				        <button type="submit" class="btn btn-primary mb-0">Submit</button>
+				        <a class="btn btn-primary mb-0" href="/cms">Reset</a>
+			        </div>
+			    </div>
+			    <!--<input class="col-2 form-control" type="date" name="startDate" th:value="${startDate}" placeholder="Start Date">
+			    <input class="col-2 form-control" type="date" name="endDate" th:value="${endDate}" placeholder="End Date">
+			    <input class="col-2 form-control" type="text" name="phone" th:value="${phone}" placeholder="Phone">
+			    <button class="col-2 btn btn-primary" type="submit">Search</button>-->
+			</form>
+			<div th:if="${giftType != 'STARS'}">
+				<h2 th:text="'TOTAL COIN REMAINING' + ': ' + ${totalPlay}"></h2>
+				<table id="historyTable" class="table table-striped" style="width:100%">
+					<thead>
+					<tr>
+						<th>No.</th> <!-- Thêm cột số thứ tự ở đây -->
+						<th>Phone</th>
+						<th>Add Time</th>
+						<th>Gift Betting</th>
+						<th>Gift Result</th>
+						<th>Coin Betting</th>
+						<th>Coin Win</th>
+						<th>Action</th>
+						<!-- Add more headers if needed -->
+					</tr>
+					</thead>
+					<tbody>
+					<!-- Iterate through each LuckyHistoryUssd object -->
+					<tr th:each="history, stat : ${luckyHistoriesUssd.toList()}">
+						<td th:text="${stat.index + 1}"></td> <!-- Hiển thị số thứ tự -->
+						<td th:text="${history.user.phone}"></td>
+						<td th:text="${#dates.format(history.addTime, 'dd/MM/yyyy HH:mm:ss')}"></td>
+						<td th:text="${history.giftBetting}"></td>
+						<td th:text="${history.giftResult}"></td>
+						<td th:text="${history.noItem}"></td>
+						<td th:text="${history.noWin}"></td>
+						<td>
+							<!-- Thêm nút "Xem chi tiết" -->
+							<button th:if="${history.giftType == 'FBU'}" class="btn btn-info" th:onclick="showDetail([[${history.lumicashRequest}]], [[${history.lumicashResponse}]])">Show</button>
+						</td>
+						<!-- Add more columns if needed -->
+					</tr>
+					</tbody>
+				</table>
+				<div th:if="${luckyHistoriesUssd.totalPages > 1}">
+					<ul class="pagination">
+						<li class="page-item" th:classappend="${page == 0} ? disabled"><a class="page-link" th:href="@{/cms(page=0, startDate=${startDate}, endDate=${endDate}, phone=${phone}, giftType=${giftType}, size=${size})}">First</a></li>
+						<li class="page-item" th:classappend="${page == 0} ? disabled"><a class="page-link" th:href="@{/cms(page=${page - 1}, startDate=${startDate}, endDate=${endDate}, phone=${phone}, giftType=${giftType}, size=${size})}">Previous</a></li>
+						<li class="page-item" th:if="${page >= 1}"><a class="page-link" th:href="@{/cms(page=${page - 1}, startDate=${startDate}, endDate=${endDate}, phone=${phone}, giftType=${giftType}, size=${size})}" th:text="${page}"></a></li>
+						<li class="page-item active"><a class="page-link" href="#">[[${page + 1}]]</a></li>
+						<li class="page-item" th:if="${page < luckyHistoriesUssd.totalPages - 1}"><a class="page-link" th:href="@{/cms(page=${page + 1}, startDate=${startDate}, endDate=${endDate}, phone=${phone}, giftType=${giftType}, size=${size})}" th:text="${page + 2}"></a></li>
+						<li class="page-item" th:classappend="${page == luckyHistoriesUssd.totalPages - 1} ? disabled"><a class="page-link" th:href="@{/cms(page=${page + 1}, startDate=${startDate}, endDate=${endDate}, phone=${phone}, giftType=${giftType}, size=${size})}">Next</a></li>
+						<li class="page-item" th:classappend="${page == luckyHistoriesUssd.totalPages - 1} ? disabled"><a class="page-link" th:href="@{/cms(page=${luckyHistoriesUssd.totalPages - 1}, startDate=${startDate}, endDate=${endDate}, phone=${phone}, giftType=${giftType}, size=${size})}">Last</a></li>
+					</ul>
+				</div>
+				<div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+					<div class="modal-dialog modal-dialog-centered">
+						<div class="modal-content">
+							<div class="modal-header">
+								<h5 class="modal-title" id="exampleModalLabel">Thông tin chi tiết</h5>
+								<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+							</div>
+							<div class="modal-body" id="detailBody">
+								<!-- Nội dung chi tiết sẽ được hiển thị ở đây -->
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div th:if="${giftType == 'STARS'}">
+				<table id="usersTable" class="table table-striped" style="width:100%">
+					<thead>
+					<tr>
+						<th>No.</th> <!-- Thêm cột số thứ tự ở đây -->
+						<th>Phone</th>
+						<th>Add Time</th>
+						<th>Total Star</th>
+					</tr>
+					</thead>
+					<tbody>
+					<!-- Iterate through each LuckyHistoryUssd object -->
+					<tr th:each="user, stat : ${users.toList()}">
+						<td th:text="${stat.index + 1}"></td> <!-- Hiển thị số thứ tự -->
+						<td th:text="${user.phone}"></td>
+						<td th:text="${#dates.format(user.addTime, 'dd/MM/yyyy HH:mm:ss')}"></td>
+						<td th:text="${user.totalStar}"></td>
+						<!-- Add more columns if needed -->
+					</tr>
+					</tbody>
+				</table>
+				<div th:if="${users.totalPages > 1}">
+					<ul class="pagination">
+						<li class="page-item" th:classappend="${page == 0} ? disabled"><a class="page-link" th:href="@{/cms(page=0, startDate=${startDate}, endDate=${endDate}, phone=${phone}, giftType=${giftType}, size=${size})}">First</a></li>
+						<li class="page-item" th:classappend="${page == 0} ? disabled"><a class="page-link" th:href="@{/cms(page=${page - 1}, startDate=${startDate}, endDate=${endDate}, phone=${phone}, giftType=${giftType}, size=${size})}">Previous</a></li>
+						<li class="page-item" th:if="${page >= 1}"><a class="page-link" th:href="@{/cms(page=${page - 1}, startDate=${startDate}, endDate=${endDate}, phone=${phone}, giftType=${giftType}, size=${size})}" th:text="${page}"></a></li>
+						<li class="page-item active"><a class="page-link" href="#">[[${page + 1}]]</a></li>
+						<li class="page-item" th:if="${page < users.totalPages - 1}"><a class="page-link" th:href="@{/cms(page=${page + 1}, startDate=${startDate}, endDate=${endDate}, phone=${phone}, giftType=${giftType}, size=${size})}" th:text="${page + 2}"></a></li>
+						<li class="page-item" th:classappend="${page == users.totalPages - 1} ? disabled"><a class="page-link" th:href="@{/cms(page=${page + 1}, startDate=${startDate}, endDate=${endDate}, phone=${phone}, giftType=${giftType}, size=${size})}">Next</a></li>
+						<li class="page-item" th:classappend="${page == users.totalPages - 1} ? disabled"><a class="page-link" th:href="@{/cms(page=${users.totalPages - 1}, startDate=${startDate}, endDate=${endDate}, phone=${phone}, giftType=${giftType}, size=${size})}">Last</a></li>
+					</ul>
+				</div>
+			</div>
+			<div class="mt-5"></div>
+		</div>
+	</div>
+    <th:block th:replace="~{view/layout::js}"></th:block>
+	<script src="https://cdn.datatables.net/2.0.3/js/dataTables.js"></script>
+
+    <script>
+		function resetForm() {
+			let msisdn = document.getElementById("phone").value = '';
+			document.getElementById("startDate").value = '';
+			document.getElementById("endDate").value = '';
+			document.getElementById("size").value = '';
+
+			document.getElementById("myForm").reset();
+		}
+	</script>
+	
+	<script>
+	  // Hàm này được gọi khi click vào mỗi hàng trong bảng
+	  function showDetail(lumicashRequest, lumicashResponse) {
+	    // Tạo nội dung chi tiết dựa trên thông tin từ hàng đã chọn
+	    let detailContent = `
+	        <div class="detail-content">
+		  	<p><strong>Lumicash Request:</strong> ${lumicashRequest}</p>
+			<p><strong>Lumicash Response:</strong> ${lumicashResponse}</p>
+		  </div>
+	    `;
+	    
+	    // Hiển thị nội dung chi tiết trong modal
+	    document.getElementById('detailBody').innerHTML = detailContent;
+	
+	    // Mở modal
+	    $('#detailModal').modal('show');
+	  }
+	</script>
+	
+</body>
+</html>

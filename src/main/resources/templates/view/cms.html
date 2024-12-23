@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"></meta>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"></meta>
+    <title>CMS</title>
+    
+    <th:block th:replace="~{view/layout::css}"></th:block>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+<body>
+	<div class="html-content">
+		<div class="container">
+		    <h1 class="text-center">CMS</h1>
+		    <div class="d-flex justify-content-end">
+		    	<button class="btn btn-primary" onclick="CreatePDFfromHTML()">Export</button>
+		    </div>
+		    <form action="/cms/revenue" th:object="${dateRangeDTO}" id="myForm">
+			    <div class="row justify-content-center mb-3">
+			        <div class="col-md-2">
+			            <label for="endDate" class="form-label">Msisdn:</label>
+			            <input id="msisdn" type="text" th:field="${dateRangeDTO.msisdn}" name="endDate" class="form-control" />
+			        </div>
+			        <div class="col-md-2">
+			            <label for="startDate" class="form-label">Start Date:</label>
+			            <input id="startDate" type="date" th:field="${dateRangeDTO.startDate}" name="startDate" class="form-control" />
+			        </div>
+			        <div class="col-md-2">
+			            <label for="endDate" class="form-label">End Date:</label>
+			            <input id="endDate" type="date" th:field="${dateRangeDTO.endDate}" name="endDate" class="form-control" />
+			        </div>
+			        <div class="col-md-2">
+			            <label for="endDate" class="form-label">Rows per page:</label>
+				        <select id="rowsPerPage" th:field="${dateRangeDTO.rowsPerPage}" class="form-select">
+						    <option value="30">30</option>
+						    <option value="50">50</option>
+						    <option value="100">100</option>
+						    <option value="200">200</option>
+						    <option value="500">500</option>
+						    <!-- Thêm các tùy chọn khác nếu cần -->
+						</select>			        
+					</div>
+			        <div class="col-md-2 align-self-end">
+				        <button type="submit" class="btn btn-primary mb-0">Submit</button>
+				        <a class="btn btn-primary mb-0" href="/cms/revenue">Reset</a>
+			        </div>
+			    </div>
+		    </form>
+		    
+		    <div class="row mb-3">
+				<div class="col-md-12">
+				    <h2 th:text="'REVENUE' + ': ' + ${totalAmount} + ' FBU'"></h2>
+				    <canvas class="mb-3" id="mpsRequestChart" width="800" height="200"></canvas>
+				</div>
+			</div>
+			
+		    <div class="row mb-3">
+				<div class="col-md-6">
+				    <h2 th:text="'RENEW' + ': ' + ${totalRenew} + ' Turn'"></h2>
+		    		<canvas class="mb-3" id="mpsRequestRenewChart" width="800" height="400"></canvas>
+				</div>
+				<div class="col-md-6">
+				    <h2 th:text="'BUY MORE' + ': ' + ${totalBuyMore} + ' Turn'"></h2>
+		    		<canvas class="mb-3" id="mpsRequestBuyMoreChart" width="800" height="400"></canvas>
+				</div>
+			</div>
+				
+		    <div class="row mb-3">
+				<div class="col-md-6">
+				    <h2 th:text="'CANCEL' + ': ' + ${totalCancel} + ' Turn'"></h2>
+		    		<canvas class="mb-3" id="mpsRequestCancelChart" width="800" height="400"></canvas>
+				</div>
+				<div class="col-md-6">
+				    <h2 th:text="'REGISTER' + ': ' + ${totalRegister} + ' Turn'"></h2>
+		    		<canvas class="mb-3" id="mpsRequestRegisterChart" width="800" height="400"></canvas>
+				</div>
+			</div>
+			
+
+			
+		    <div class="row mb-3">
+				<div class="col-md-12">
+				    <h2 th:text="'USER WIN' + ': ' + ${totalNoItem} + ' FBU'"></h2>
+					<canvas id="luckyHistoryChart" width="800" height="200"></canvas>
+				</div>
+			</div>
+			
+			<div class="col-md-12">
+			    <h2 th:text="'TOP USER WIN: ' + ${totalWinMoney} + ' FBU'"></h2>
+				<canvas id="topUserWithMoneyChart" width="800" height="200"></canvas>
+			</div>
+			
+			<div class="col-md-12">
+			    <h2 th:text="'TOP USER PLAY: ' + ${totalPlay} + ' Turn'"></h2>
+				<canvas id="topUserWithPlayChart" width="800" height="200"></canvas>
+			</div>
+			
+			<div class="col-md-12">
+			    <h2 th:text="'TOP USER CHARGE: ' + ${totalCharge} + ' FBU'"></h2>
+				<canvas id="topUserChargeChart" width="800" height="200"></canvas>
+			</div>
+			<div class="mt-5"></div>
+		</div>
+	</div>
+	
+    <script th:inline="javascript">
+        /* <![CDATA[ */
+        var mpsRequestsData = [[${mpsRequests}]];
+        var mpsRequestDates = [];
+        var mpsRequestAmounts = [];
+        var mpsRequestVNDAmounts = [];
+
+        /* Convert the list of objects to two arrays: one for dates and one for amounts */
+        mpsRequestsData.forEach(function(mpsRequest) {
+            mpsRequestDates.push(mpsRequest.date);
+            mpsRequestAmounts.push(mpsRequest.count);
+            mpsRequestVNDAmounts.push(mpsRequest.count * 8.5);
+        });
+
+        /* Chart.js initialization */
+        var ctx = document.getElementById('mpsRequestChart').getContext('2d');
+        var myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: mpsRequestDates,
+                datasets: [{
+                    label: 'FBU',
+                    data: mpsRequestAmounts,
+                    fill: false,
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1
+                }]
+            }
+        });
+        /* ]]> */
+        
+        
+        /* <![CDATA[ */
+        var luckyHistoriesData = [[${luckyHistories}]];
+        var luckyHistoryDates = [];
+        var luckyHistoryAmounts = [];
+        var luckyHistoryAmountsVND = [];
+
+        /* Convert the list of objects to two arrays: one for dates and one for amounts */
+        luckyHistoriesData.forEach(function(luckyHistory) {
+            luckyHistoryDates.push(luckyHistory.date);
+            luckyHistoryAmounts.push(luckyHistory.count);
+            luckyHistoryAmountsVND.push(luckyHistory.count * 8.5);
+        });
+
+
+        /* Chart.js initialization */
+        var ctx = document.getElementById('luckyHistoryChart').getContext('2d');
+        var myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: luckyHistoryDates,
+                datasets: [{
+                    label: 'FBU',
+                    data: luckyHistoryAmounts,
+                    fill: false,
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1
+                }]
+            }
+        });
+        /* ]]> */
+        
+        
+        /* <![CDATA[ */
+        var mpsRequestsRenewData = [[${mpsRequestsRenew}]];
+        var mpsRequestsRenewDates = [];
+        var mpsRequestsRenewCounts = [];
+
+        /* Convert the list of objects to two arrays: one for dates and one for amounts */
+        mpsRequestsRenewData.forEach(function(mpsRequest) {
+            mpsRequestsRenewDates.push(mpsRequest.date);
+            mpsRequestsRenewCounts.push(mpsRequest.count);
+        });
+
+        /* Chart.js initialization */
+        var ctx = document.getElementById('mpsRequestRenewChart').getContext('2d');
+        var myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: mpsRequestsRenewDates,
+                datasets: [{
+                    label: 'RENEW',
+                    data: mpsRequestsRenewCounts,
+                    fill: false,
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1
+                }]
+            }
+        });
+        /* ]]> */
+        
+        
+        /* <![CDATA[ */
+        var mpsRequestsRegisterData = [[${mpsRequestsRegister}]];
+        var mpsRequestsRegisterDates = [];
+        var mpsRequestsRegisterCounts = [];
+
+        /* Convert the list of objects to two arrays: one for dates and one for amounts */
+        mpsRequestsRegisterData.forEach(function(mpsRequest) {
+            mpsRequestsRegisterDates.push(mpsRequest.date);
+            mpsRequestsRegisterCounts.push(mpsRequest.count);
+        });
+
+        /* Chart.js initialization */
+        var ctx = document.getElementById('mpsRequestRegisterChart').getContext('2d');
+        var myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: mpsRequestsRegisterDates,
+                datasets: [{
+                    label: 'REGISTER',
+                    data: mpsRequestsRegisterCounts,
+                    fill: false,
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1
+                }]
+            }
+        });
+        /* ]]> */
+        
+        
+        /* <![CDATA[ */
+        var mpsRequestsCancelData = [[${mpsRequestsCancel}]];
+        var mpsRequestsCancelDates = [];
+        var mpsRequestsCancelCounts = [];
+
+        /* Convert the list of objects to two arrays: one for dates and one for amounts */
+        mpsRequestsCancelData.forEach(function(mpsRequest) {
+            mpsRequestsCancelDates.push(mpsRequest.date);
+            mpsRequestsCancelCounts.push(mpsRequest.count);
+        });
+
+        /* Chart.js initialization */
+        var ctx = document.getElementById('mpsRequestCancelChart').getContext('2d');
+        var myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: mpsRequestsCancelDates,
+                datasets: [{
+                    label: 'CANCEL',
+                    data: mpsRequestsCancelCounts,
+                    fill: false,
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1
+                }]
+            }
+        });
+        /* ]]> */
+        
+        
+        /* <![CDATA[ */
+        var mpsRequestsBuyMoreData = [[${mpsRequestsBuyMore}]];
+        var mpsRequestsBuyMoreDates = [];
+        var mpsRequestsBuyMoreCounts = [];
+
+        /* Convert the list of objects to two arrays: one for dates and one for amounts */
+        mpsRequestsBuyMoreData.forEach(function(mpsRequest) {
+            mpsRequestsBuyMoreDates.push(mpsRequest.date);
+            mpsRequestsBuyMoreCounts.push(mpsRequest.count);
+        });
+
+        /* Chart.js initialization */
+        var ctx = document.getElementById('mpsRequestBuyMoreChart').getContext('2d');
+        var myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: mpsRequestsBuyMoreDates,
+                datasets: [{
+                    label: 'COUNT',
+                    data: mpsRequestsBuyMoreCounts,
+                    fill: false,
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1
+                }]
+            }
+        });
+        /* ]]> */
+        
+        
+        /* <![CDATA[ */
+        var topUserWithMoneyData = [[${topUserWithMoney}]];
+        var topUserWithMoneyDates = [];
+        var topUserWithMoneyCounts = [];
+
+        /* Convert the list of objects to two arrays: one for dates and one for amounts */
+        topUserWithMoneyData.forEach(function(mpsRequest) {
+            topUserWithMoneyDates.push(mpsRequest.date);
+            topUserWithMoneyCounts.push(mpsRequest.count);
+        });
+
+        /* Chart.js initialization */
+        var ctx = document.getElementById('topUserWithMoneyChart').getContext('2d');
+        var myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: topUserWithMoneyDates,
+                datasets: [{
+                    label: 'FBU',
+                    data: topUserWithMoneyCounts,
+                    fill: false,
+                    tension: 0.1
+                }]
+            }
+        });
+        
+        
+        /* <![CDATA[ */
+        var topUserWithPlayData = [[${topUserWithPlay}]];
+        var topUserWithPlayDates = [];
+        var topUserWithPlayCounts = [];
+
+        /* Convert the list of objects to two arrays: one for dates and one for amounts */
+        topUserWithPlayData.forEach(function(mpsRequest) {
+            topUserWithPlayDates.push(mpsRequest.date);
+            topUserWithPlayCounts.push(mpsRequest.count);
+        });
+
+        /* Chart.js initialization */
+        var ctx = document.getElementById('topUserWithPlayChart').getContext('2d');
+        var myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: topUserWithPlayDates,
+                datasets: [{
+                    label: 'PLAY',
+                    data: topUserWithPlayCounts,
+                    fill: false,
+                    tension: 0.1
+                }]
+            }
+        });
+        /* ]]> */
+
+        
+        /* <![CDATA[ */
+        var topUserChargeData = [[${topUserCharge}]];
+        var topUserChargeDates = [];
+        var topUserChargeCounts = [];
+
+        /* Convert the list of objects to two arrays: one for dates and one for amounts */
+        topUserChargeData.forEach(function(mpsRequest) {
+            topUserChargeDates.push(mpsRequest.date);
+            topUserChargeCounts.push(mpsRequest.count);
+        });
+
+        /* Chart.js initialization */
+        var ctx = document.getElementById('topUserChargeChart').getContext('2d');
+        var myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: topUserChargeDates,
+                datasets: [{
+                    label: 'FBU',
+                    data: topUserChargeCounts,
+                    fill: false,
+                    tension: 0.1
+                }]
+            }
+        });
+        /* ]]> */
+    </script>
+    
+    <script>
+		function resetForm() {
+			let msisdn = document.getElementById("msisdn");
+			msisdn.value = '';
+			document.getElementById("startDate").value = '';
+			document.getElementById("endDate").value = '';
+			document.getElementById("rowsPerPage").value = '';
+
+			document.getElementById("myForm").reset();
+		}
+	</script>
+
+    <script>
+		function generatePDF() {
+		    // Tạo một đối tượng jsPDF
+		    var doc = new jsPDF();
+		
+		    // Lấy nội dung của toàn bộ trang web
+		    var html = document.documentElement;
+		
+		    // Chuyển đổi nội dung thành PDF
+		    doc.html(html, {
+		        callback: function(pdf) {
+		            // Lưu hoặc tải file PDF
+		            pdf.save('document.pdf');
+		        }
+		    });
+		}
+		
+		//Create PDf from HTML...
+		function CreatePDFfromHTML() {
+		    var HTML_Width = $(".html-content").width();
+		    var HTML_Height = $(".html-content").height();
+		    var top_left_margin = 15;
+		    var PDF_Width = HTML_Width + (top_left_margin * 2);
+		    var PDF_Height = (PDF_Width * 1.5) + (top_left_margin * 2);
+		    var canvas_image_width = HTML_Width;
+		    var canvas_image_height = HTML_Height;
+		
+		    var totalPDFPages = Math.ceil(HTML_Height / PDF_Height) - 1;
+		
+		    html2canvas($(".html-content")[0]).then(function (canvas) {
+		        var imgData = canvas.toDataURL("image/jpeg", 1.0);
+		        var pdf = new jsPDF('p', 'pt', [PDF_Width, PDF_Height]);
+		        pdf.addImage(imgData, 'JPG', top_left_margin, top_left_margin, canvas_image_width, canvas_image_height);
+		        for (var i = 1; i <= totalPDFPages; i++) { 
+		            pdf.addPage(PDF_Width, PDF_Height);
+		            pdf.addImage(imgData, 'JPG', top_left_margin, -(PDF_Height*i)+(top_left_margin*4),canvas_image_width,canvas_image_height);
+		        }
+		        pdf.save("report.pdf");
+		        //$(".html-content").hide();
+		    });
+		}
+	</script>
+
+    <th:block th:replace="~{view/layout::js}"></th:block>
+</body>
+</html>
