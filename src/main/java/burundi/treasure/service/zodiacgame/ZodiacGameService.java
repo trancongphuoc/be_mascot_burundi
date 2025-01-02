@@ -1,5 +1,6 @@
 package burundi.treasure.service.zodiacgame;
 
+import burundi.treasure.firebase.ZodiacGameFirebaseService;
 import burundi.treasure.model.LuckyHistory;
 import burundi.treasure.model.User;
 import burundi.treasure.model.ZodiacGameProperties;
@@ -13,8 +14,10 @@ import burundi.treasure.repository.ZodiacGameRepository;
 import burundi.treasure.service.LuckyService;
 import burundi.treasure.service.UserService;
 import jakarta.annotation.PostConstruct;
+import jakarta.transaction.Transactional;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -42,6 +45,9 @@ public class ZodiacGameService {
 
     @Autowired
     private LuckyService luckyService;
+
+    @Autowired
+    private ZodiacGameFirebaseService zodiacGameFirebaseService;
 
     private static final String PROPERTY_KEY = "ZodiacGame";
     @PostConstruct
@@ -90,6 +96,7 @@ public class ZodiacGameService {
         return zodiacGameProperties.getNoGame();
     }
 
+    @Transactional
     public void resetNoGameToday() {
         ZodiacGameProperties zodiacGameProperties = zodiacGamePropertiesRepository.getReferenceById(PROPERTY_KEY);
         zodiacGameProperties.setNoGame(0L);
@@ -139,72 +146,108 @@ public class ZodiacGameService {
         return zodiacGameDTO;
     }
 
+    public List<ZodiacGame> getListZodiacGameProcessing() {
+        return zodiacGameRepository.findByStatus("PROCESSING");
+    }
+
 
    public void processResult(Long zodiacGameId) {
        log.warn(String.format("ZodiacGameTasks.processResult Start: %s, GameId: %s", new Date(), zodiacGameId));
-
-       ZodiacGame zodiacGame = findById(zodiacGameId);
-       List<ZodiacGameHistory> zodiacGameHistories =
-               zodiacGameHistoryService.findAllByZodiacGameId(zodiacGameId);
-       // Tổng tiền thắng thua của ván cược
-       Long totalScoreWin = 0L;
-       Long totalIcoinBetting = 0L;
-       ZodiacCard zodiacCard = zodiacGame.getZodiacCard();
-
-       List<LuckyHistory> luckyHistories = new ArrayList<>();
-       for(ZodiacGameHistory zodiacGameHistory: zodiacGameHistories) {
-           try {
-               if(zodiacGameHistory.getStatus().equalsIgnoreCase("PENDING")
-                       || zodiacGameHistory.getStatus().equalsIgnoreCase("NEW")
-                       || zodiacGameHistory.getStatus().equalsIgnoreCase("ERROR")) {
-                   totalIcoinBetting += zodiacGameHistory.getTotalIcoinBetting();
-                   if(zodiacCard.getId().equals(zodiacGameHistory.getZodiacCard().getId())) {
-                       long winScore = zodiacGameHistory.getTotalIcoinBetting() * zodiacCard.getMultiply();
-
-                       User user = zodiacGameHistory.getUser();
-                       userService.incrementTotalStar(user, winScore);
-                       userService.saveUser(user);
-
-                       zodiacGameHistory.setTotalIcoinWin(winScore);
-                       zodiacGameHistory.setStatus("WIN");
-
-                       totalScoreWin += winScore;
-                   } else {
-                       zodiacGameHistory.setStatus("LOSE");
-                   }
-               } else {
-                   zodiacGameHistory.setStatus("ERROR");
-               }
-           } catch (Exception e) {
-               zodiacGameHistory.setStatus("ERROR");
-           }
-
-           LuckyHistory luckyHistory = new LuckyHistory();
-           luckyHistory.setGiftType("STARS");
-           luckyHistory.setAddTime(new Date());
-           luckyHistory.setGiftId(zodiacGameHistory.getZodiacCard().getId());
-
-           luckyHistory.setGiftBetting(zodiacGameHistory.getZodiacCard().getName());
-           luckyHistory.setGiftResult(zodiacCard.getName());
-
-           luckyHistory.setNoItem(zodiacGameHistory.getTotalIcoinBetting());
-           luckyHistory.setNoWin(zodiacGameHistory.getTotalIcoinWin());
-           luckyHistory.setUser(zodiacGameHistory.getUser());
-
-           luckyHistories.add(luckyHistory);
+       try {
+           ZodiacGame zodiacGame = findById(zodiacGameId);
+           processResult(zodiacGame);
+       } catch (Exception e) {
+           log.warn("BUGS", e);
        }
 
-       luckyService.saveAll(luckyHistories);
-
-       zodiacGameHistoryService.saveList(zodiacGameHistories);
-
-       zodiacGame.setTotalIcoinWin(totalScoreWin);
-       zodiacGame.setTotalIcoinBetting(totalIcoinBetting);
-
-       // Cập nhật status đã xử lí xong
-       zodiacGame.setStatus("PROCESSED");
-       save(zodiacGame);
    }
+
+    public void processResult(ZodiacGame zodiacGame) {
+        try {
+            log.warn(String.format("ZodiacGameTasks.processResult Start: %s, GameId: %s", new Date(), zodiacGame.getId()));
+
+            List<ZodiacGameHistory> zodiacGameHistories =
+                    zodiacGameHistoryService.findAllByZodiacGameId(zodiacGame.getId());
+            // Tổng tiền thắng thua của ván cược
+            Long totalScoreWin = 0L;
+            Long totalIcoinBetting = 0L;
+            ZodiacCard zodiacCard = zodiacGame.getZodiacCard();
+
+            List<LuckyHistory> luckyHistories = new ArrayList<>();
+
+            Map<Long, User> userMap = new HashMap<>();
+            for(ZodiacGameHistory zodiacGameHistory: zodiacGameHistories) {
+                try {
+                    if(zodiacGameHistory.getStatus().equalsIgnoreCase("PENDING")
+                            || zodiacGameHistory.getStatus().equalsIgnoreCase("NEW")
+                            || zodiacGameHistory.getStatus().equalsIgnoreCase("ERROR")) {
+                        totalIcoinBetting += zodiacGameHistory.getTotalIcoinBetting();
+                        if(zodiacCard.getId().equals(zodiacGameHistory.getZodiacCard().getId())) {
+                            long winScore = zodiacGameHistory.getTotalIcoinBetting() * zodiacCard.getMultiply();
+
+                            User user = zodiacGameHistory.getUser();
+                            userService.incrementTotalStar(user, winScore);
+                            userService.incrementTotalPlay(user, winScore);
+                            userService.saveUser(user);
+
+                            userMap.put(user.getId(), user);
+                            zodiacGameHistory.setTotalIcoinWin(winScore);
+                            zodiacGameHistory.setStatus("WIN");
+
+                            totalScoreWin += winScore;
+                        } else {
+                            zodiacGameHistory.setStatus("LOSE");
+                        }
+
+                        LuckyHistory luckyHistory = new LuckyHistory();
+                        luckyHistory.setGiftType("STARS");
+
+                        luckyHistory.setNoGame(zodiacGame.getNoGame());
+
+                        luckyHistory.setAddTime(zodiacGameHistory.getAddTime());
+                        luckyHistory.setGiftId(zodiacGameHistory.getZodiacCard().getId());
+
+                        luckyHistory.setGiftBetting(zodiacGameHistory.getZodiacCard().getName());
+                        luckyHistory.setGiftResult(zodiacCard.getName());
+
+                        luckyHistory.setNoItem(zodiacGameHistory.getTotalIcoinBetting());
+                        luckyHistory.setNoWin(zodiacGameHistory.getTotalIcoinWin());
+                        luckyHistory.setUser(zodiacGameHistory.getUser());
+
+                        luckyHistories.add(luckyHistory);
+                    } else {
+                        zodiacGameHistory.setStatus("ERROR");
+                    }
+                } catch (Exception e) {
+                    log.warn("BUGS", e);
+                    zodiacGameHistory.setStatus("ERROR");
+                }
+            }
+
+            luckyService.saveAll(luckyHistories);
+
+            zodiacGameHistoryService.saveList(zodiacGameHistories);
+
+            zodiacGame.setTotalIcoinWin(totalScoreWin);
+            zodiacGame.setTotalIcoinBetting(totalIcoinBetting);
+
+            // Cập nhật status đã xử lí xong
+            zodiacGame.setStatus("PROCESSED");
+            save(zodiacGame);
+
+            for(Long userId: userMap.keySet()) {
+                zodiacGameFirebaseService.updateTotalIcoin(userId, userMap.get(userId).getTotalPlay());
+            }
+        } catch (Exception e) {
+            log.warn("BUGS", e);
+
+            if(zodiacGame != null) {
+                zodiacGame.setStatus("ERROR");
+                save(zodiacGame);
+            }
+        }
+
+    }
 
 
 }

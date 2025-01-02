@@ -26,7 +26,7 @@ public interface UserRepository extends JpaRepository<User, Long>{
     
     @Modifying
     @Transactional
-    @Query("UPDATE User u SET u.totalPlay = 0")
+    @Query("UPDATE User u SET u.totalPlay = 0 where u.totalPlay > 0")
     void resetTotalPlay();
     
 //    @Modifying
@@ -36,8 +36,13 @@ public interface UserRepository extends JpaRepository<User, Long>{
     
     @Modifying
     @Transactional
-    @Query("UPDATE User u SET u.totalStar = 0")
+    @Query("UPDATE User u SET u.totalStar = 0 where u.totalStar > 0")
     void resetTotalStar();
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE User u SET u.totalStarMonth = 0 where u.totalStarMonth > 0")
+    void resetTotalStarMonth();
     
     @Modifying
     @Transactional
@@ -49,11 +54,16 @@ public interface UserRepository extends JpaRepository<User, Long>{
 //    List<User> findTop2UsersWithMaxTotalStar();
     
  // Truy vấn 2 người dùng có totalStar lớn nhất
-    Page<User> findTop2UserByOrderByTotalStarDesc(Pageable pageable);
+    Page<User> findTop3UserByOrderByTotalStarDesc(Pageable pageable);
+
+    Page<User> findTop3UserByOrderByTotalStarMonthDesc(Pageable pageable);
     Page<User> findTop50UserByOrderByTotalStarDesc(Pageable pageable);
+    Page<User> findTop50UserByOrderByTotalStarMonthDesc(Pageable pageable);
+
+    List<User> findAllByTotalStarGreaterThanOrderByTotalStarDesc(Long totalStar);
+    List<User> findAllByTotalStarMonthGreaterThanOrderByTotalStarMonthDesc(Long totalStar);
 
     Page<User> findAllByTotalStarGreaterThanAndPhoneContainingOrderByTotalStarDesc(Long totalStar, String phone, Pageable pageable);
-
 
     // Top user total win
     Page<User> findTop2UserByOrderByTotalWinDesc(Pageable pageable);

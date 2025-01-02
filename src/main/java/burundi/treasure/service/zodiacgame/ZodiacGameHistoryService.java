@@ -91,7 +91,7 @@ public class ZodiacGameHistoryService {
             Long totalIcoinWin;
             ZodiacCard zodiacCard = zodiacGame.getZodiacCard();
             for(ZodiacGameHistory zodiacGameHistory: zodiacGameHistories) {
-                if(zodiacGame.getZodiacCard().getId().equals(zodiacGameHistory.getZodiacCard().getId())) {
+                if(zodiacCard.getId().equals(zodiacGameHistory.getZodiacCard().getId())) {
                     totalIcoinWin = zodiacGameHistory.getTotalIcoinBetting() * zodiacCard.getMultiply();
                     if(topUserMap.containsKey(zodiacGameHistory.getUser().getId())) {
                         long newValue = totalIcoinWin + topUserMap.get(zodiacGameHistory.getUser().getId());
@@ -174,8 +174,12 @@ public class ZodiacGameHistoryService {
                     zodiacGameUserDTO.setTotalIcoinBetting(zodiacGameUserDTO.getTotalIcoinBetting() + zodiacGameHistory.getTotalIcoinBetting());
                 }
 
-                if(zodiacGameUserDTO.getTotalIcoinWin() != null) {
-                    zodiacGameUserDTO.setTotalIcoinWin(zodiacGameUserDTO.getTotalIcoinWin() + zodiacGameHistory.getTotalIcoinWin());
+                if(zodiacGameHistory.getTotalIcoinWin() != null) {
+                    if(zodiacGameUserDTO.getTotalIcoinWin() != null) {
+                        zodiacGameUserDTO.setTotalIcoinWin(zodiacGameUserDTO.getTotalIcoinWin() + zodiacGameHistory.getTotalIcoinWin());
+                    } else {
+                        zodiacGameUserDTO.setTotalIcoinWin(zodiacGameHistory.getTotalIcoinWin());
+                    }
                 }
 
                 if(!zodiacGameUserDTO.getZodiacCardIds().contains(zodiacCard.getId())) {

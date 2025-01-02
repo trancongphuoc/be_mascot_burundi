@@ -3,6 +3,7 @@ package burundi.treasure.repository;
 import java.util.Date;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -22,6 +23,12 @@ public interface MPSRequestRepository extends JpaRepository<MPSRequest, Long>{
     @Query("DELETE FROM MPSRequest m WHERE m.action = :action AND m.params = :params AND m.chargetTime < :date")
     void deleteByActionAndParamsAndChargetTimeBefore(String action, String params, Date date);
 
+    Page<MPSRequest> findAllByChargetTimeBetweenAndMsisdnContaining(Date startDate, Date endDate, String msisdn, Pageable pageable);
+    Page<MPSRequest> findAllByChargetTimeAfterAndMsisdnContaining(Date startDate, String phone, Pageable pageable);
+
+    Page<MPSRequest> findAllByChargetTimeBeforeAndMsisdnContaining(Date endDate, String phone, Pageable pageable);
+
+    Page<MPSRequest> findAllByMsisdnContainingOrderByChargetTimeDesc(String phone, Pageable pageable);
 
     // Query method để tính tổng amount trong 24 giờ gần nhất
     @Query("SELECT COALESCE(SUM(m.amount), 0) FROM MPSRequest m WHERE m.chargetTime >= :startTime "

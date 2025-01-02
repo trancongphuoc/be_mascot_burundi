@@ -27,10 +27,10 @@ public class LumicashService {
 
     @Autowired
     private ConfigRepository configRepository;
-    private static String USERNAME = "W_MASCOT_PRIZE";
-    private static String PASSWORD = "MASCOTPay_1234%^&*";
+    private static String USERNAME = "MASCOT";
+    private static String PASSWORD = "Pay_1234%^&*";
     private static String KEY = "ab50fc6f7245a7913ac7aca1f2ecd0ca";
-    private static String PARTNER_CODE = "W_MASCOT_PRIZE";
+    private static String PARTNER_CODE = "MASCOT";
     private static String URL = "http://10.225.5.73:8020/ewapi/api/3rd/customer/transaction/payonbehalf";
 
     //    private static String USERNAME = "LOTO_BASIC";

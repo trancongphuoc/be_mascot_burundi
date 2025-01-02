@@ -16,6 +16,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 
 @Log
@@ -36,6 +38,8 @@ public class ZodiacGameFirebaseService {
     private static final String NAME = "name";
     private static final String PROFILE_IMAGE_LINK = "profileImageLink";
     private static final String TOTAL_ICOIN_WIN_TODAY = "totalIcoinWinToday";
+    private static final String TOTAL_ICOIN_WIN_MONTHDAY = "totalIcoinWinMonthday";
+
     private static final String TOTAL_ICOIN = "totalIcoin";
 
     private static final String STATE = "state";
@@ -52,13 +56,7 @@ public class ZodiacGameFirebaseService {
     private UserService userService;
 
     @Autowired
-    private ZodiacGameService zodiacGameService;
-
-    @Autowired
     private ZodiacGameHistoryService zodiacGameHistoryService;
-
-    @Autowired
-    private ZodiacCardService zodiacCardService;
 
     public void joinGame(Long userId) {
         User user = userService.findById(userId);
@@ -78,6 +76,8 @@ public class ZodiacGameFirebaseService {
         userUpdates.put(LAST_UPDATE, System.currentTimeMillis());
         userUpdates.put(NO_BETTING_TODAY, userDTO.getNoBettingToday());
         userUpdates.put(TOTAL_ICOIN_WIN_TODAY, userDTO.getTotalIcoinWinToday());
+        userUpdates.put(TOTAL_ICOIN_WIN_MONTHDAY, userDTO.getTotalIcoinWinMonthday());
+
         userUpdates.put(TOTAL_ICOIN, userDTO.getTotalIcoin());
 
         // Chỉ cập nhật các trường được chỉ định
@@ -148,6 +148,7 @@ public class ZodiacGameFirebaseService {
                             userUpdates.put(PROFILE_IMAGE_LINK, userDTO.getProfileImageLink());
                             userUpdates.put(LAST_UPDATE, System.currentTimeMillis());
                             userUpdates.put(TOTAL_ICOIN_WIN_TODAY, userDTO.getTotalIcoinWinToday());
+                            userUpdates.put(TOTAL_ICOIN_WIN_MONTHDAY, userDTO.getTotalIcoinWinMonthday());
 
                             // Chỉ cập nhật các trường được chỉ định
                             userRef.updateChildrenAsync(userUpdates);
@@ -328,7 +329,7 @@ public class ZodiacGameFirebaseService {
         log.log(Level.WARNING, "BUGS", error.getMessage());
     }
 
-    public void startGame(Long transactionId, Long noGameToday) throws ExecutionException, InterruptedException {
+    public void startGame(Long transactionId, Long noGameToday) throws ExecutionException, InterruptedException, TimeoutException {
 
         Map<String, Object> stateUpdates = new HashMap<>();
         stateUpdates.put(TRANSACTION_ID, transactionId);
@@ -339,10 +340,10 @@ public class ZodiacGameFirebaseService {
         ApiFuture<Void> future = ZODIAC_GAME_REF.child(STATE).updateChildrenAsync(stateUpdates);
 
         // Đợi cho đến khi hoàn thành
-        future.get();
+        future.get(10, TimeUnit.SECONDS);
     }
 
-    public void updateTransactionId(Long transactionId) throws ExecutionException, InterruptedException {
+    public void updateTransactionId(Long transactionId) throws ExecutionException, InterruptedException, TimeoutException {
 
         Map<String, Object> stateUpdates = new HashMap<>();
         stateUpdates.put(TRANSACTION_ID, transactionId);
@@ -351,19 +352,26 @@ public class ZodiacGameFirebaseService {
         ApiFuture<Void> future = ZODIAC_GAME_REF.child(STATE).updateChildrenAsync(stateUpdates);
 
         // Đợi cho đến khi hoàn thành
-        future.get();
+        future.get(10, TimeUnit.SECONDS);
     }
 
-    public void endGame(ZodiacCardDTO zodiacCardDTO, Map<Long, UserZodiacGameDTO> topUsersMap) throws ExecutionException, InterruptedException {
+    public void endGame(ZodiacCardDTO zodiacCardDTO, Map<Long, UserZodiacGameDTO> topUsersMap) throws ExecutionException, InterruptedException, TimeoutException {
+
+        // Chuyển đổi Map với key Long sang Map với key String
+        Map<String, UserZodiacGameDTO> convertedTopUsersMap = new HashMap<>();
+        for (Map.Entry<Long, UserZodiacGameDTO> entry : topUsersMap.entrySet()) {
+            entry.getValue().setAddTime(null);
+            convertedTopUsersMap.put(String.valueOf(entry.getKey()), entry.getValue());
+        }
 
         Map<String, Object> stateUpdates = new HashMap<>();
         stateUpdates.put(ZODIAC_CARD, zodiacCardDTO);
-        stateUpdates.put(TOP_USERS, topUsersMap);
+        stateUpdates.put(TOP_USERS, convertedTopUsersMap);
 
         ApiFuture<Void> future = ZODIAC_GAME_REF.child(STATE).updateChildrenAsync(stateUpdates);
 
         // Đợi cho đến khi hoàn thành
-        future.get();
+        future.get(10, TimeUnit.SECONDS);
 
         // Thêm zodiacCard vào danh sách kết quả gần đây
         addZodiacCardsRecent(zodiacCardDTO);

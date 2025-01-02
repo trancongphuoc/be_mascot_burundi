@@ -87,14 +87,23 @@ public class UserService {
 	public List<UserDTO> convertUserDTOForTop(List<User> users) {
 		List<UserDTO> results = new ArrayList<>();
 		for(User user: users) {
+			UserDTO u = new UserDTO(user);
+
 			if(user.getPhone().startsWith("257")) {
-				UserDTO u = new UserDTO(user);
+				if (u.getPhone() != null && u.getPhone().length() >= 11) {
+					// Cắt chuỗi từ đầu đến ba ký tự cuối và thay thế bằng dấu ***
+					String phone = u.getPhone().replace("257", "");
+					phone = phone.substring(0, phone.length() - 3) + "***";
+					u.setPhone(phone);
+				}
+			} else {
 				if (u.getPhone() != null && u.getPhone().length() >= 4) {
 					// Cắt chuỗi từ đầu đến ba ký tự cuối và thay thế bằng dấu ***
 					u.setPhone(u.getPhone().substring(0, u.getPhone().length() - 3) + "***");
 				}
-				results.add(u);
 			}
+
+			results.add(u);
 		}
 
 		return results;
@@ -192,14 +201,24 @@ public class UserService {
 	}
 
 
-	public List<User> getTop2UsersWithMaxTotalStar() {
-		Pageable pageable = PageRequest.of(0, 2); // Lấy 2 phần tử đầu tiên
-		return userRepository.findTop2UserByOrderByTotalStarDesc(pageable).toList();
+	public List<User> getTop3UsersWithMaxTotalStarDay() {
+		Pageable pageable = PageRequest.of(0, 3); // Lấy 3 phần tử đầu tiên
+		return userRepository.findTop3UserByOrderByTotalStarDesc(pageable).toList();
+	}
+
+	public List<User> getTop3UsersWithMaxTotalStarMonth() {
+		Pageable pageable = PageRequest.of(0, 3); // Lấy 3 phần tử đầu tiên
+		return userRepository.findTop3UserByOrderByTotalStarMonthDesc(pageable).toList();
 	}
 
 	public List<User> getTop50UsersWithMaxTotalStar() {
 		Pageable pageable = PageRequest.of(0, 50); // Lấy 2 phần tử đầu tiên
 		return userRepository.findTop50UserByOrderByTotalStarDesc(pageable).toList();
+	}
+
+	public List<User> getTop50UsersWithMaxTotalStarMonth() {
+		Pageable pageable = PageRequest.of(0, 50); // Lấy 2 phần tử đầu tiên
+		return userRepository.findTop50UserByOrderByTotalStarMonthDesc(pageable).toList();
 	}
 
 	public List<User> getTop30UsersOrderByTotalWin() {
@@ -219,8 +238,21 @@ public class UserService {
 		userRepository.resetTotalStar();
 	}
 
+	public void resetTotalStarMonth() {
+		userRepository.resetTotalStarMonth();
+	}
+
 	public Page<User> findAllByTotalStarGreaterThanAndPhoneContainingOrderByTotalStarDesc(Long totalStar, String phone, Pageable pageable) {
 		return userRepository.findAllByTotalStarGreaterThanAndPhoneContainingOrderByTotalStarDesc(totalStar, phone, pageable);
+	}
+
+
+	public List<User> findAllOrderByTotalStarDaily() {
+		return userRepository.findAllByTotalStarGreaterThanOrderByTotalStarDesc(0L);
+	}
+
+	public List<User> findAllOrderByTotalStarMonthly() {
+		return userRepository.findAllByTotalStarMonthGreaterThanOrderByTotalStarMonthDesc(0L);
 	}
 
 }

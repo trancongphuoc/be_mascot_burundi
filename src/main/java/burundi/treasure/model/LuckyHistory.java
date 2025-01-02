@@ -33,6 +33,8 @@ public class LuckyHistory {
 
     private Long noWin;
 
+    private Long noGame;
+
 //    @ManyToOne(fetch = FetchType.LAZY)
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)

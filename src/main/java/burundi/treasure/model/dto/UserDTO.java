@@ -20,6 +20,7 @@ public class UserDTO {
     private Date addTime;
     private long totalIcoin;
     private long totalStar;
+    private long totalStarMonth;
     private String facebookUserId;
     
 //    @JsonProperty("isPremium")
@@ -31,8 +32,11 @@ public class UserDTO {
     public String getName() {
         String phone = this.phone;
 
-        if (phone != null && phone.length() > 4) {
-            return phone.substring(0, 4) + "****";
+        if(phone != null && phone.startsWith("257") && phone.length() >= 11) {
+            phone = phone.replace("257", "");
+            phone = phone.substring(0, phone.length() - 3) + "***";
+        } else if (phone != null && phone.length() >= 4){
+            phone = phone.substring(0, phone.length() - 3) + "***";
         }
 
         return phone;
@@ -52,6 +56,7 @@ public class UserDTO {
         this.addTime = user.getAddTime();
         this.totalIcoin = user.getTotalPlay();
         this.totalStar = user.getTotalStar();
+        this.totalStarMonth = user.getTotalStarMonth();
         this.isPremium = user.isPremium();
         this.isWin = user.isWin();
         this.facebookUserId = String.valueOf(this.id);

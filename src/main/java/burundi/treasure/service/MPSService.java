@@ -7,10 +7,7 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import javax.crypto.SecretKey;
@@ -18,6 +15,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
@@ -540,5 +538,31 @@ public class MPSService {
 
 	public void deleteByChargetTimeBefore(Date date) {
 		mpsRequestRepository.deleteByChargetTimeBefore(date);
+	}
+
+
+	public Page<MPSRequest> findAllByChargetTimeBetweenAndMsisdnContaining(Date startDate, Date endDate, String phone, Pageable pageable) {
+
+		Long amoutCondition = -1L;
+		if (startDate != null && endDate != null) {
+			Calendar calendar = Calendar.getInstance();
+			calendar.setTime(endDate);
+			calendar.add(Calendar.DATE, 1);
+			// Cả hai điều kiện đều được thỏa mãn
+			return mpsRequestRepository.findAllByChargetTimeBetweenAndMsisdnContaining(startDate, calendar.getTime(), phone, pageable);
+		} else if (startDate != null) {
+			// Chỉ điều kiện startDate được thỏa mãn
+			return mpsRequestRepository.findAllByChargetTimeAfterAndMsisdnContaining(startDate, phone, pageable);
+		} else if (endDate != null) {
+			Calendar calendar = Calendar.getInstance();
+			calendar.setTime(endDate);
+			calendar.add(Calendar.DATE, 1);
+			// Chỉ điều kiện endDate được thỏa mãn
+			return mpsRequestRepository.findAllByChargetTimeBeforeAndMsisdnContaining(calendar.getTime(), phone, pageable);
+		} else {
+			// Không có điều kiện tìm kiếm về thời gian
+			return mpsRequestRepository.findAllByMsisdnContainingOrderByChargetTimeDesc(phone, pageable);
+		}
+
 	}
 }

@@ -19,14 +19,14 @@ public class ZodiacCardService {
 //    public void initZodiacCards() {
 //        List<ZodiacCard> zodiacCards = new ArrayList<>();
 //
-//        zodiacCards.add(new ZodiacCard("ZODIAC_CARD_1", "Aries", 5L, 19.0, "https://data4.ikara.co/data/minio/ikara-data/tarot_image/trau.svg"));
-//        zodiacCards.add(new ZodiacCard("ZODIAC_CARD_2", "Taurus", 5L, 19.0, "https://data4.ikara.co/data/minio/ikara-data/tarot_image/ho.svg"));
-//        zodiacCards.add(new ZodiacCard("ZODIAC_CARD_3", "Gemini", 5L, 19.0, "https://data4.ikara.co/data/minio/ikara-data/tarot_image/rong.svg"));
-//        zodiacCards.add(new ZodiacCard("ZODIAC_CARD_4", "Cancer", 8L, 12.0, "https://data4.ikara.co/data/minio/ikara-data/tarot_image/ran.svg"));
-//        zodiacCards.add(new ZodiacCard("ZODIAC_CARD_5", "Leo", 8L, 12.0, "https://data4.ikara.co/data/minio/ikara-data/tarot_image/ngua.svg"));
-//        zodiacCards.add(new ZodiacCard("ZODIAC_CARD_6", "Virgo", 10L, 9.0, "https://data4.ikara.co/data/minio/ikara-data/tarot_image/de.svg"));
-//        zodiacCards.add(new ZodiacCard("ZODIAC_CARD_7", "Chicken", 15L, 6.0, "https://data4.ikara.co/data/minio/ikara-data/tarot_image/ga.svg"));
-//        zodiacCards.add(new ZodiacCard("ZODIAC_CARD_8", "Big", 20L, 4.0, "https://data4.ikara.co/data/minio/ikara-data/tarot_image/lon.svg"));
+//        zodiacCards.add(new ZodiacCard("ZODIAC_CARD_1", "Taurus", 5L, 19.0, "https://mascot.lumitel.bi/images/taurus.svg"));
+//        zodiacCards.add(new ZodiacCard("ZODIAC_CARD_2", "Tiger", 5L, 19.0, "https://mascot.lumitel.bi/images/tiger.svg"));
+//        zodiacCards.add(new ZodiacCard("ZODIAC_CARD_3", "Dragon", 5L, 19.0, "https://mascot.lumitel.bi/images/dragon.svg"));
+//        zodiacCards.add(new ZodiacCard("ZODIAC_CARD_4", "Snake", 8L, 12.0, "https://mascot.lumitel.bi/images/snake.svg"));
+//        zodiacCards.add(new ZodiacCard("ZODIAC_CARD_5", "Horse", 8L, 12.0, "https://mascot.lumitel.bi/images/horse.svg"));
+//        zodiacCards.add(new ZodiacCard("ZODIAC_CARD_6", "Goat", 10L, 9.0, "https://mascot.lumitel.bi/images/goat.svg"));
+//        zodiacCards.add(new ZodiacCard("ZODIAC_CARD_7", "Chicken", 15L, 6.0, "https://mascot.lumitel.bi/images/chicken.svg"));
+//        zodiacCards.add(new ZodiacCard("ZODIAC_CARD_8", "Pig", 20L, 4.0, "https://mascot.lumitel.bi/images/pig.svg"));
 //
 //        zodiacCardRepository.saveAll(zodiacCards);
 //
@@ -43,6 +43,16 @@ public class ZodiacCardService {
         zodiacCardDTO.setName(zodiacCard.getName());
 
         return zodiacCardDTO;
+    }
+
+    public Map<String, ZodiacCardDTO> parseToDTOFromEntitiesMap(List<ZodiacCard> zodiacCards) {
+        Map<String, ZodiacCardDTO> zodiacCardDTOMap = new LinkedHashMap<>();
+        for(ZodiacCard zodiacCard: zodiacCards) {
+            ZodiacCardDTO zodiacCardDTO = parseToDTOFromEntity(zodiacCard);
+            zodiacCardDTOMap.put(zodiacCardDTO.getId(), zodiacCardDTO);
+        }
+
+        return zodiacCardDTOMap;
     }
 
     public ZodiacCard findById(String id) {

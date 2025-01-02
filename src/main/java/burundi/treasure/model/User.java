@@ -13,7 +13,9 @@ import lombok.ToString;
 
 @Entity
 @Table(name = "mc_users", indexes = {
-        @Index(name = "idx_phone", columnList = "phone")
+        @Index(name = "idx_phone", columnList = "phone"),
+        @Index(name = "idx_total_star", columnList = "totalStar"),
+        @Index(name = "idx_total_star_month", columnList = "totalStarMonth")
         })
 @Data
 @ToString

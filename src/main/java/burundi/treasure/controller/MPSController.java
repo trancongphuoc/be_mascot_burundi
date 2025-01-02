@@ -2,6 +2,7 @@ package burundi.treasure.controller;
 
 import java.util.Map;
 
+import burundi.treasure.firebase.ZodiacGameFirebaseService;
 import burundi.treasure.model.MPSRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +36,9 @@ public class MPSController {
 	@Autowired
 	private Utils utils;
 
+	@Autowired
+	private ZodiacGameFirebaseService zodiacGameFirebaseService;
+
 	@PostMapping("/register")
 	public ResponseEntity<?> register(@AuthenticationPrincipal UserDetails userDetails) {
 		try {
@@ -59,7 +63,10 @@ public class MPSController {
 
 				if(user.getFirstRegister() == null || !user.getFirstRegister()) {
 					user.setFirstRegister(true);
-					user.setTotalPlay(user.getTotalPlay() + 5);
+					user.setTotalPlay(user.getTotalPlay() + 1000);
+
+					// Đồng bộ icoin sang firebase
+					zodiacGameFirebaseService.updateTotalIcoin(user.getId(), user.getTotalPlay());
 				}
 
 				user.setPremium(true);
@@ -75,12 +82,15 @@ public class MPSController {
 			} else if("100".equals(mResponse.get("RES")) || "0".equals(mResponse.get("RES"))) {
 				// Verify ok thì cộng lượt chơi cho user
 				user.setFirstRegister(true);
-				user.setTotalPlay(user.getTotalPlay() + 5);
+				user.setTotalPlay(user.getTotalPlay() + 1000);
 				user.setPremium(true);
 				userService.saveUser(user);
 				response = utils.getResponseOK();
 				mpsRequest.setAmount(price);
 				mpsRequest.setStatus("PROCESSED");
+
+				// Đồng bộ icoin sang firebase
+				zodiacGameFirebaseService.updateTotalIcoin(user.getId(), user.getTotalPlay());
 
 //				String content = "Mwiyandikishije neze mu gisata Roulette. Muce kuri  https://treasure.lumitel.bi kugira mukoreshe kino gisata.Murakoze";
 //				String responseSendSms = mpsService.callApiSmsws(user.getPhone(), content);
@@ -135,10 +145,13 @@ public class MPSController {
 				response = utils.getResponseOK();
 			} else if("100".equals(mResponse.get("RES")) || "0".equals(mResponse.get("RES"))) {
 				// Verify ok thì cộng lượt chơi cho user
-				user.setTotalPlay(user.getTotalPlay() + 5);
+				user.setTotalPlay(user.getTotalPlay() + 1000);
 				user.setPremium(true);
 				userService.saveUser(user);
 				response = utils.getResponseOK();
+
+				// Đồng bộ icoin sang firebase
+				zodiacGameFirebaseService.updateTotalIcoin(user.getId(), user.getTotalPlay());
 			} else if("408".equals(mResponse.get("RES"))){
 				//Đã đăng ký sau đó hủy và đăng ký lại cùng ngày. Không bị mất tiền nên không cộng lượt chơi
 				user.setPremium(true);
@@ -250,7 +263,7 @@ public class MPSController {
 			User user = userService.findByUserName(userDetails.getUsername());
 			// Tạo 1 record để làm báo cáo doanh thu
 			MPSRequest mpsRequest = mpsService.newMPSRequest(user, "CHARGE");
-			String responseCallSendOtp = mpsService.callApiCharge(user.getPhone(),"CHARGE" , "10FBU");
+			String responseCallSendOtp = mpsService.callApiCharge(user.getPhone(),"CHARGE" , "MASCOT");
 
 			log.info("Response charge: " + responseCallSendOtp);
 
@@ -260,12 +273,15 @@ public class MPSController {
 			int price = Integer.parseInt(mResponse.get("PRICE"));
 			if("0".equals(mResponse.get("RES")) && price > 0) {
 				// Charge ok thì cộng lượt chơi cho user
-				user.setTotalPlay(user.getTotalPlay() + 5);
+				user.setTotalPlay(user.getTotalPlay() + 1000);
 				userService.saveUser(user);
 
 				mpsRequest.setAmount(price);
 				mpsRequest.setStatus("PROCESSED");
 				response = utils.getResponseOK();
+
+				// Đồng bộ icoin sang firebase
+				zodiacGameFirebaseService.updateTotalIcoin(user.getId(), user.getTotalPlay());
 			} else if("401".equals(mResponse.get("RES"))) {
 				mpsRequest.setStatus("FAILED");
 				//Ou pa gen ase lajan, Tanpri rechaje pou w ka achte plis vire 
@@ -277,7 +293,7 @@ public class MPSController {
 			mpsService.save(mpsRequest);
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {
-			log.warn(e);
+			log.warn("BUGS", e);
 			return ResponseEntity.ok().body(utils.getResponseFailed());
 		}
 	}
@@ -288,8 +304,12 @@ public class MPSController {
 			User user = userService.findByUserName(userDetails.getUsername());
 
 			// Charge ok thì cộng lượt chơi cho user
-			user.setTotalPlay(user.getTotalPlay() + 5);
+			user.setTotalPlay(user.getTotalPlay() + 1000);
 			userService.saveUser(user);
+
+
+			// Đồng bộ icoin sang firebase
+			zodiacGameFirebaseService.updateTotalIcoin(user.getId(), user.getTotalPlay());
 
 			// Tạo 1 record để làm báo cáo doanh thu
 			mpsService.newMPSRequest(user, "CHARGE");

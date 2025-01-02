@@ -5,28 +5,15 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.URI;
 import java.net.UnknownHostException;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
 import burundi.treasure.model.Config;
-import burundi.treasure.model.Gift;
 import burundi.treasure.repository.ConfigRepository;
 import burundi.treasure.service.*;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.text.StringEscapeUtils;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
@@ -462,6 +449,12 @@ public class AdminController {
         return String.valueOf(Const.IS_REWARD);
     }
 
+    @GetMapping("/resetTotalStar")
+    public ResponseEntity<?> resetTotalStar() throws IOException {
+        userService.resetTotalStar();
+        return ResponseEntity.ok("OK");
+    }
+
     @GetMapping("/hello")
     public String hello() throws UnknownHostException {
         InetAddress inetAddress = InetAddress.getLocalHost();
@@ -532,7 +525,7 @@ public class AdminController {
         String formattedDate = formatter.format(date);
 
         log.info("MyScheduledTasks.rewardTop2TotalStar");
-        List<User> users = userService.getTop2UsersWithMaxTotalStar();
+        List<User> users = userService.getTop3UsersWithMaxTotalStarMonth();
         log.info(users);
         String content = "Turabakeje!Uri umwe mubaronse inyenyeri nyinshi kuwa %s. Mufise inyenyeri %s. Mwaronse %sF";
 

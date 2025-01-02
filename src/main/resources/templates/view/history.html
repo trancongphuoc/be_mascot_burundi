@@ -43,10 +43,13 @@
 			        <div class="col-md-2">
 			            <label for="giftType" class="form-label">Type:</label>
 				        <select id="giftType" name="giftType" th:value="${giftType}" placeholder="GiftType" class="form-select">
-							<option value="" th:selected="${giftType == ''}">No Selected</option>
+							<option value="" th:selected="${giftType == ''}">Play</option>
 					        <option value="FBU" th:selected="${giftType == 'FBU'}">Winner</option>
-					        <option value="STARS" th:selected="${giftType == 'STARS'}">Stars</option>
-<!--					        <option value="PIECE" th:selected="${giftType == 'PIECE'}">Letter LUMITEL</option>-->
+							<option value="CHARGE" th:selected="${giftType == 'CHARGE'}">Charge</option>
+							<option value="DAILY" th:selected="${giftType == 'DAILY'}">Top Daily</option>
+							<option value="MONTHLY" th:selected="${giftType == 'MONTHLY'}">Top Monthly</option>
+
+							<!--					        <option value="PIECE" th:selected="${giftType == 'PIECE'}">Letter LUMITEL</option>-->
 <!--					        <option value="SAMSUNG" th:selected="${giftType == 'SAMSUNG'}">Samsung Galaxy</option>-->
 <!--					        <option value="SHARE" th:selected="${giftType == 'SHARE'}">Plus</option>-->
 <!--							<option value="UNLUCKY" th:selected="${giftType == 'UNLUCKY'}">Unlucky</option>-->
@@ -74,7 +77,7 @@
 			    <input class="col-2 form-control" type="text" name="phone" th:value="${phone}" placeholder="Phone">
 			    <button class="col-2 btn btn-primary" type="submit">Search</button>-->
 			</form>
-			<div th:if="${giftType != 'STARS'}">
+			<div th:if="${giftType == ''}">
 				<h2 th:text="'TOTAL COIN REMAINING' + ': ' + ${totalPlay}"></h2>
 				<table id="historyTable" class="table table-striped" style="width:100%">
 					<thead>
@@ -82,10 +85,51 @@
 						<th>No.</th> <!-- Thêm cột số thứ tự ở đây -->
 						<th>Phone</th>
 						<th>Add Time</th>
+						<th>No Game</th>
 						<th>Gift Betting</th>
 						<th>Gift Result</th>
 						<th>Coin Betting</th>
 						<th>Coin Win</th>
+						<!-- Add more headers if needed -->
+					</tr>
+					</thead>
+					<tbody>
+					<!-- Iterate through each LuckyHistoryUssd object -->
+					<tr th:each="history, stat : ${luckyHistoriesUssd.toList()}">
+						<td th:text="${stat.index + 1}"></td> <!-- Hiển thị số thứ tự -->
+						<td th:text="${history.user.phone}"></td>
+						<td th:text="${#dates.format(history.addTime, 'dd/MM/yyyy HH:mm:ss')}"></td>
+						<td th:text="${history.noGame}"></td>
+						<td th:text="${history.giftBetting}"></td>
+						<td th:text="${history.giftResult}"></td>
+						<td th:text="${history.noItem}"></td>
+						<td th:text="${history.noWin}"></td>
+						<!-- Add more columns if needed -->
+					</tr>
+					</tbody>
+				</table>
+				<div th:if="${luckyHistoriesUssd.totalPages > 1}">
+					<ul class="pagination">
+						<li class="page-item" th:classappend="${page == 0} ? disabled"><a class="page-link" th:href="@{/cms(page=0, startDate=${startDate}, endDate=${endDate}, phone=${phone}, giftType=${giftType}, size=${size})}">First</a></li>
+						<li class="page-item" th:classappend="${page == 0} ? disabled"><a class="page-link" th:href="@{/cms(page=${page - 1}, startDate=${startDate}, endDate=${endDate}, phone=${phone}, giftType=${giftType}, size=${size})}">Previous</a></li>
+						<li class="page-item" th:if="${page >= 1}"><a class="page-link" th:href="@{/cms(page=${page - 1}, startDate=${startDate}, endDate=${endDate}, phone=${phone}, giftType=${giftType}, size=${size})}" th:text="${page}"></a></li>
+						<li class="page-item active"><a class="page-link" href="#">[[${page + 1}]]</a></li>
+						<li class="page-item" th:if="${page < luckyHistoriesUssd.totalPages - 1}"><a class="page-link" th:href="@{/cms(page=${page + 1}, startDate=${startDate}, endDate=${endDate}, phone=${phone}, giftType=${giftType}, size=${size})}" th:text="${page + 2}"></a></li>
+						<li class="page-item" th:classappend="${page == luckyHistoriesUssd.totalPages - 1} ? disabled"><a class="page-link" th:href="@{/cms(page=${page + 1}, startDate=${startDate}, endDate=${endDate}, phone=${phone}, giftType=${giftType}, size=${size})}">Next</a></li>
+						<li class="page-item" th:classappend="${page == luckyHistoriesUssd.totalPages - 1} ? disabled"><a class="page-link" th:href="@{/cms(page=${luckyHistoriesUssd.totalPages - 1}, startDate=${startDate}, endDate=${endDate}, phone=${phone}, giftType=${giftType}, size=${size})}">Last</a></li>
+					</ul>
+				</div>
+			</div>
+
+
+			<div th:if="${giftType == 'FBU'}">
+				<table id="winTable" class="table table-striped" style="width:100%">
+					<thead>
+					<tr>
+						<th>No.</th> <!-- Thêm cột số thứ tự ở đây -->
+						<th>Phone</th>
+						<th>Add Time</th>
+						<th>FBU Win</th>
 						<th>Action</th>
 						<!-- Add more headers if needed -->
 					</tr>
@@ -96,10 +140,7 @@
 						<td th:text="${stat.index + 1}"></td> <!-- Hiển thị số thứ tự -->
 						<td th:text="${history.user.phone}"></td>
 						<td th:text="${#dates.format(history.addTime, 'dd/MM/yyyy HH:mm:ss')}"></td>
-						<td th:text="${history.giftBetting}"></td>
-						<td th:text="${history.giftResult}"></td>
 						<td th:text="${history.noItem}"></td>
-						<td th:text="${history.noWin}"></td>
 						<td>
 							<!-- Thêm nút "Xem chi tiết" -->
 							<button th:if="${history.giftType == 'FBU'}" class="btn btn-info" th:onclick="showDetail([[${history.lumicashRequest}]], [[${history.lumicashResponse}]])">Show</button>
@@ -134,36 +175,74 @@
 				</div>
 			</div>
 
-			<div th:if="${giftType == 'STARS'}">
-				<table id="usersTable" class="table table-striped" style="width:100%">
+			<div th:if="${giftType == 'DAILY' || giftType == 'MONTHLY'}">
+				<table id="topTable" class="table table-striped" style="width:100%">
 					<thead>
 					<tr>
 						<th>No.</th> <!-- Thêm cột số thứ tự ở đây -->
 						<th>Phone</th>
 						<th>Add Time</th>
-						<th>Total Star</th>
+						<th>Score</th>
 					</tr>
 					</thead>
 					<tbody>
 					<!-- Iterate through each LuckyHistoryUssd object -->
-					<tr th:each="user, stat : ${users.toList()}">
+					<tr th:each="history, stat : ${luckyHistoriesUssd.toList()}">
 						<td th:text="${stat.index + 1}"></td> <!-- Hiển thị số thứ tự -->
-						<td th:text="${user.phone}"></td>
-						<td th:text="${#dates.format(user.addTime, 'dd/MM/yyyy HH:mm:ss')}"></td>
-						<td th:text="${user.totalStar}"></td>
-						<!-- Add more columns if needed -->
+						<td th:text="${history.user.phone}"></td>
+						<td th:text="${#dates.format(history.addTime, 'dd/MM/yyyy HH:mm:ss')}"></td>
+						<td th:text="${history.noItem}"></td>
 					</tr>
 					</tbody>
 				</table>
-				<div th:if="${users.totalPages > 1}">
+				<div th:if="${luckyHistoriesUssd.totalPages > 1}">
 					<ul class="pagination">
 						<li class="page-item" th:classappend="${page == 0} ? disabled"><a class="page-link" th:href="@{/cms(page=0, startDate=${startDate}, endDate=${endDate}, phone=${phone}, giftType=${giftType}, size=${size})}">First</a></li>
 						<li class="page-item" th:classappend="${page == 0} ? disabled"><a class="page-link" th:href="@{/cms(page=${page - 1}, startDate=${startDate}, endDate=${endDate}, phone=${phone}, giftType=${giftType}, size=${size})}">Previous</a></li>
 						<li class="page-item" th:if="${page >= 1}"><a class="page-link" th:href="@{/cms(page=${page - 1}, startDate=${startDate}, endDate=${endDate}, phone=${phone}, giftType=${giftType}, size=${size})}" th:text="${page}"></a></li>
 						<li class="page-item active"><a class="page-link" href="#">[[${page + 1}]]</a></li>
-						<li class="page-item" th:if="${page < users.totalPages - 1}"><a class="page-link" th:href="@{/cms(page=${page + 1}, startDate=${startDate}, endDate=${endDate}, phone=${phone}, giftType=${giftType}, size=${size})}" th:text="${page + 2}"></a></li>
-						<li class="page-item" th:classappend="${page == users.totalPages - 1} ? disabled"><a class="page-link" th:href="@{/cms(page=${page + 1}, startDate=${startDate}, endDate=${endDate}, phone=${phone}, giftType=${giftType}, size=${size})}">Next</a></li>
-						<li class="page-item" th:classappend="${page == users.totalPages - 1} ? disabled"><a class="page-link" th:href="@{/cms(page=${users.totalPages - 1}, startDate=${startDate}, endDate=${endDate}, phone=${phone}, giftType=${giftType}, size=${size})}">Last</a></li>
+						<li class="page-item" th:if="${page < luckyHistoriesUssd.totalPages - 1}"><a class="page-link" th:href="@{/cms(page=${page + 1}, startDate=${startDate}, endDate=${endDate}, phone=${phone}, giftType=${giftType}, size=${size})}" th:text="${page + 2}"></a></li>
+						<li class="page-item" th:classappend="${page == luckyHistoriesUssd.totalPages - 1} ? disabled"><a class="page-link" th:href="@{/cms(page=${page + 1}, startDate=${startDate}, endDate=${endDate}, phone=${phone}, giftType=${giftType}, size=${size})}">Next</a></li>
+						<li class="page-item" th:classappend="${page == luckyHistoriesUssd.totalPages - 1} ? disabled"><a class="page-link" th:href="@{/cms(page=${luckyHistoriesUssd.totalPages - 1}, startDate=${startDate}, endDate=${endDate}, phone=${phone}, giftType=${giftType}, size=${size})}">Last</a></li>
+					</ul>
+				</div>
+			</div>
+
+			<div th:if="${giftType == 'CHARGE'}">
+				<table id="mpsRequestTables" class="table table-striped" style="width:100%">
+					<thead>
+					<tr>
+						<th>No.</th> <!-- Thêm cột số thứ tự ở đây -->
+						<th>Phone</th>
+						<th>Add Time</th>
+						<th>Type</th>
+						<th>Amount</th>
+						<th>Status</th>
+
+					</tr>
+					</thead>
+					<tbody>
+					<!-- Iterate through each LuckyHistoryUssd object -->
+					<tr th:each="request, stat : ${mpsRequests.toList()}">
+						<td th:text="${stat.index + 1}"></td> <!-- Hiển thị số thứ tự -->
+						<td th:text="${request.msisdn}"></td>
+						<td th:text="${#dates.format(request.chargetTime, 'dd/MM/yyyy HH:mm:ss')}"></td>
+						<td th:text="${request.action == 'CHARGE' ? 'PLAYONETIME_WEB' : request.action}"></td>
+						<td th:text="${request.amount}"></td>
+						<td th:text="${(request.amount <= 0 && (request.action != 'CANCEL' && request.action != 'CANCEL_WEB')) ? 'FAIL (Cause: Re-register same day)' : 'SUCCESS'}"></td>
+
+					</tr>
+					</tbody>
+				</table>
+				<div th:if="${mpsRequests.totalPages > 1}">
+					<ul class="pagination">
+						<li class="page-item" th:classappend="${page == 0} ? disabled"><a class="page-link" th:href="@{/cms(page=0, startDate=${startDate}, endDate=${endDate}, phone=${phone}, giftType=${giftType}, size=${size})}">First</a></li>
+						<li class="page-item" th:classappend="${page == 0} ? disabled"><a class="page-link" th:href="@{/cms(page=${page - 1}, startDate=${startDate}, endDate=${endDate}, phone=${phone}, giftType=${giftType}, size=${size})}">Previous</a></li>
+						<li class="page-item" th:if="${page >= 1}"><a class="page-link" th:href="@{/cms(page=${page - 1}, startDate=${startDate}, endDate=${endDate}, phone=${phone}, giftType=${giftType}, size=${size})}" th:text="${page}"></a></li>
+						<li class="page-item active"><a class="page-link" href="#">[[${page + 1}]]</a></li>
+						<li class="page-item" th:if="${page < mpsRequests.totalPages - 1}"><a class="page-link" th:href="@{/cms(page=${page + 1}, startDate=${startDate}, endDate=${endDate}, phone=${phone}, giftType=${giftType}, size=${size})}" th:text="${page + 2}"></a></li>
+						<li class="page-item" th:classappend="${page == mpsRequests.totalPages - 1} ? disabled"><a class="page-link" th:href="@{/cms(page=${page + 1}, startDate=${startDate}, endDate=${endDate}, phone=${phone}, giftType=${giftType}, size=${size})}">Next</a></li>
+						<li class="page-item" th:classappend="${page == mpsRequests.totalPages - 1} ? disabled"><a class="page-link" th:href="@{/cms(page=${mpsRequests.totalPages - 1}, startDate=${startDate}, endDate=${endDate}, phone=${phone}, giftType=${giftType}, size=${size})}">Last</a></li>
 					</ul>
 				</div>
 			</div>

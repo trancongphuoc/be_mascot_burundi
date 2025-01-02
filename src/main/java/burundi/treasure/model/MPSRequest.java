@@ -15,7 +15,9 @@ import lombok.extern.log4j.Log4j2;
 @Data
 @ToString
 @Entity
-@Table(name = "mc_request")
+@Table(name = "mc_request", indexes = {
+		@Index(name = "idx_request_chargetime", columnList = "chargetTime")
+})
 @Log4j2
 public class MPSRequest {
 	@Id

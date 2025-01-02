@@ -2,6 +2,7 @@ package burundi.treasure.controller;
 
 import java.util.concurrent.CompletableFuture;
 
+import burundi.treasure.firebase.ZodiacGameFirebaseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,7 +29,10 @@ public class MPSWebservice {
 	
 	@Autowired
 	private UserService userService;
-	
+
+	@Autowired
+	private ZodiacGameFirebaseService zodiacGameFirebaseService;
+
 	@PostMapping("/Register")
 	public ResponseEntity<String> register(@RequestBody String body) {
 		String response = mpsService.responseSusccessfully;
@@ -51,11 +55,19 @@ public class MPSWebservice {
 				
 				if(mpsRequest.getAmount() > 0) {
 					user.setPremium(true);
-					user.setTotalPlay(user.getTotalPlay() + 5);
+					user.setTotalPlay(user.getTotalPlay() + 1000);
+
+					// Đồng bộ icoin sang firebase
+					zodiacGameFirebaseService.updateTotalIcoin(user.getId(), user.getTotalPlay());
 				} else if(user.getFirstRegister() == null || !user.getFirstRegister()) {
 					user.setFirstRegister(true);
 					user.setPremium(true);
-					user.setTotalPlay(user.getTotalPlay() + 5);
+					user.setTotalPlay(user.getTotalPlay() + 1000);
+
+					// Đồng bộ icoin sang firebase
+					zodiacGameFirebaseService.updateTotalIcoin(user.getId(), user.getTotalPlay());
+				} else {
+					user.setPremium(true);
 				}
 				userService.saveUser(user);
 			}
@@ -89,7 +101,10 @@ public class MPSWebservice {
 
 				if(mpsRequest.getAmount() > 0) {
 					user.setFirstRegister(true);
-					user.setTotalPlay(user.getTotalPlay() + 5);
+					user.setTotalPlay(user.getTotalPlay() + 1000);
+
+					// Đồng bộ icoin sang firebase
+					zodiacGameFirebaseService.updateTotalIcoin(user.getId(), user.getTotalPlay());
 				}
 				userService.saveUser(user);
 			}
@@ -147,10 +162,13 @@ public class MPSWebservice {
 					
 					// param = 0 là tài khoản còn tiền
 					if(mpsRequest.getAmount() > 0 && "0".equals(mpsRequest.getParams())) {
-						user.setTotalPlay(user.getTotalPlay() + 5);
+						user.setTotalPlay(user.getTotalPlay() + 1000);
 						user.setPremium(true);
 						mpsRequest.setUser(user);
 						mpsService.add(mpsRequest);
+
+						// Đồng bộ icoin sang firebase
+						zodiacGameFirebaseService.updateTotalIcoin(user.getId(), user.getTotalPlay());
 					} else {
 						user.setPremium(false);
 					}

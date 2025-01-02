@@ -2,6 +2,7 @@ package burundi.treasure.controller;
 
 import burundi.treasure.firebase.ZodiacGameFirebaseService;
 import burundi.treasure.model.User;
+import burundi.treasure.model.dto.UserDTO;
 import burundi.treasure.model.dto.UserZodiacGameDTO;
 import burundi.treasure.model.dto.zodiacgame.ZodiacCardDTO;
 import burundi.treasure.model.dto.zodiacgame.ZodiacGameDTO;
@@ -10,6 +11,7 @@ import burundi.treasure.model.zodiacgame.ZodiacCard;
 import burundi.treasure.model.zodiacgame.ZodiacGame;
 import burundi.treasure.model.zodiacgame.ZodiacGameHistory;
 import burundi.treasure.payload.BettingRequest;
+import burundi.treasure.payload.EndRequest;
 import burundi.treasure.payload.Response;
 import burundi.treasure.service.LuckyService;
 import burundi.treasure.service.UserService;
@@ -48,6 +50,26 @@ public class ZodiacGameController {
 
     @Autowired
     private LuckyService luckyService;
+
+    @PostMapping("/update-zodiac-cards")
+    public ResponseEntity<?> updateZodiacCards() {
+        Response response = new Response("OK", "OK");
+        Map<String, Object> data = new HashMap<>();
+        try {
+            List<ZodiacCard> zodiacCards = zodiacCardService.findAll();
+            Map<String, ZodiacCardDTO> zodiacCardDTOMap = zodiacCardService.parseToDTOFromEntitiesMap(zodiacCards);
+
+            zodiacGameFirebaseService.updateZodiacCards(zodiacCardDTOMap);
+        } catch (Exception e) {
+            log.warn("BUGS",e);;
+            response.setStatus("FAILED");
+            response.setMessage(e.getMessage());
+        }
+
+        response.setData(data);
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping("/join-game")
     public ResponseEntity<?> joinGame(@AuthenticationPrincipal UserDetails userDetails) {
         Response response = new Response("OK", "OK");
@@ -56,15 +78,16 @@ public class ZodiacGameController {
             User user = userService.findByUserName(userDetails.getUsername());
 
             UserZodiacGameDTO userDTO = new UserZodiacGameDTO(user);
-            userDTO.setNoBettingToday(zodiacGameHistoryService.getNoBettingToday(null)); //
-            userDTO.setTotalIcoinWinToday(zodiacGameHistoryService.getTotalIcoinWinToday(null)); //
+            userDTO.setNoBettingToday(zodiacGameHistoryService.getNoBettingToday(user.getId())); //
+            userDTO.setTotalIcoinWinToday(user.getTotalStar()); //
+            userDTO.setTotalIcoinWinMonthday(user.getTotalStarMonth()); //
 
             // Đồng bộ sang firebase
             zodiacGameFirebaseService.joinGame(userDTO);
 
             data.put("user", userDTO);
         } catch (Exception e) {
-            log.warn(e);
+            log.warn("BUGS",e);;
             response.setStatus("FAILED");
             response.setMessage(e.getMessage());
         }
@@ -88,7 +111,7 @@ public class ZodiacGameController {
             zodiacGameFirebaseService.exitGame(user.getId());
 
         } catch (Exception e) {
-            log.warn(e);
+            log.warn("BUGS",e);;
             response.setStatus("FAILED");
             response.setMessage(e.getMessage());
         }
@@ -104,7 +127,7 @@ public class ZodiacGameController {
             User user = userService.findByUserName(userDetails.getUsername());
             zodiacGameFirebaseService.doNothing(user.getId());
         } catch (Exception e) {
-            log.warn(e);
+            log.warn("BUGS",e);;
             response.setStatus("FAILED");
             response.setMessage(e.getMessage());
         }
@@ -137,14 +160,15 @@ public class ZodiacGameController {
 
                     // Kiểm tra xem còn đủ tiền để đặt cược không
                     if(remainingIcoin >= totalIcoinBetting && totalIcoinBetting > 0) {
-                        // Đồng bộ icoin sang firebase
-                        zodiacGameFirebaseService.updateTotalIcoin(user.getId(), remainingIcoin - totalIcoinBetting);
 
                         ZodiacCard zodiacCard = zodiacCardService.findByIdAndCache(zodiacCardIdBetting);
                         ZodiacGameHistory zodiacGameHistory = zodiacGameHistoryService.newZodiacGameHistory(user, zodiacGame, zodiacCard, totalIcoinBetting);
 
                         user.setTotalPlay(remainingIcoin - totalIcoinBetting);
                         userService.saveUser(user);
+
+                        // Đồng bộ icoin sang firebase
+                        zodiacGameFirebaseService.updateTotalIcoin(user.getId(), user.getTotalPlay());
 
                         zodiacGameHistory.setStatus("PENDING");
                         zodiacGameHistoryService.save(zodiacGameHistory);
@@ -159,7 +183,7 @@ public class ZodiacGameController {
                     }
                 } else {
                     response.setStatus("FAILED");
-                    response.setMessage("Không thể đặt cược nhiều hơn 4 lá bài");
+                    response.setMessage("Tigira gushika kukarata 4 za Mascot");
                 }
 
             } else {
@@ -198,7 +222,7 @@ public class ZodiacGameController {
             data.put("transactionId", zodiacGame.getId());
             data.put("noGameToday", zodiacGame.getNoGame());
         } catch (Exception e) {
-            log.warn(e);
+            log.warn("BUGS",e);;
             response.setStatus("FAILED");
             response.setMessage("FAILED");
         }
@@ -206,13 +230,13 @@ public class ZodiacGameController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/end/{id}")
-    public ResponseEntity<?> end(@PathVariable(value = "id") long id) {
+    @PostMapping("/end")
+    public ResponseEntity<?> end(@RequestBody EndRequest request) {
         Response response = new Response("OK", "OK");
         Map<String, Object> data = new HashMap<>();
         try {
             ZodiacGame zodiacGame =
-                    zodiacGameService.findById(id);
+                    zodiacGameService.findById(request.getZodiacGameId());
             Map<Long, UserZodiacGameDTO> topUserSortedMap;
             ZodiacCardDTO zodiacCardDTO;
 
@@ -234,25 +258,26 @@ public class ZodiacGameController {
                 // Sync to firebase
                 zodiacGameFirebaseService.endGame(zodiacCardDTO, topUserSortedMap);
 
-
-                CompletableFuture.runAsync(() -> zodiacGameService.processResult(zodiacGame.getId()));
+//                CompletableFuture.runAsync(() -> zodiacGameService.processResult(zodiacGame));
             }
 
         } catch (Exception e) {
-            log.warn(e);
+            response.setStatus("FAILED");
+            response.setMessage("FAILED");
+            log.warn("BUGS",e);
         }
 
         return ResponseEntity.ok(response);
     }
 
 
-    @PostMapping("/process-result/{id}")
-    public ResponseEntity<?> processResult(@PathVariable(value = "id") long zodiacGameId) {
+    @PostMapping("/process-result")
+    public ResponseEntity<?> processResult(@RequestBody EndRequest request) {
         Response response = new Response("OK", "OK");
         try {
-            zodiacGameService.processResult(zodiacGameId);
+            zodiacGameService.processResult(request.getZodiacGameId());
         } catch (Exception e) {
-            log.warn(e);
+            log.warn("BUGS",e);;
         }
 
         return ResponseEntity.ok(response);
@@ -270,7 +295,7 @@ public class ZodiacGameController {
         } catch (Exception e) {
             response.setStatus("FAILED");
             response.setMessage("FAILED");
-            log.warn(e);
+            log.warn("BUGS",e);;
         }
 
         data.put("zodiacGameList", zodiacGameDTOList);
@@ -280,7 +305,7 @@ public class ZodiacGameController {
 
     @GetMapping("/user-history")
     public ResponseEntity<?> userHistory(@AuthenticationPrincipal UserDetails userDetails) {
-        Response response = new Response();
+        Response response = new Response("OK", "OK");
         Map<String, Object> data = new HashMap<>();
         List<ZodiacGameUserDTO> zodiacGameUserDTOList = new ArrayList<>();
         try {
@@ -289,9 +314,49 @@ public class ZodiacGameController {
 
             zodiacGameUserDTOList = zodiacGameHistoryService.entityToDTO(zodiacGameHistories);
         } catch (Exception e) {
-            log.warn(e);
+            log.warn("BUGS",e);;
         }
         data.put("zodiacGameUserList", zodiacGameUserDTOList);
+        response.setData(data);
+        return ResponseEntity.ok(response);
+    }
+
+
+    @GetMapping("/top-daily")
+    public ResponseEntity<?> topDaily() {
+        Response response = new Response("OK", "OK");
+        Map<String, Object> data = new HashMap<>();
+        List<UserDTO> userDTOs = new ArrayList<>();
+        try {
+            List<User> users = userService.getTop50UsersWithMaxTotalStar();
+            userDTOs = userService.convertUserDTOForTop(users);
+        } catch (Exception e) {
+            log.warn("BUGS",e);
+            response.setStatus("FAILED");
+            response.setMessage("FAILED");
+        }
+
+        data.put("users", userDTOs);
+        response.setData(data);
+        return ResponseEntity.ok(response);
+    }
+
+
+    @GetMapping("/top-monthly")
+    public ResponseEntity<?> topMonthly() {
+        Response response = new Response("OK", "OK");
+        Map<String, Object> data = new HashMap<>();
+        List<UserDTO> userDTOs = new ArrayList<>();
+        try {
+            List<User> users = userService.getTop50UsersWithMaxTotalStarMonth();
+            userDTOs = userService.convertUserDTOForTop(users);
+        } catch (Exception e) {
+            log.warn("BUGS",e);
+            response.setStatus("FAILED");
+            response.setMessage("FAILED");
+        }
+
+        data.put("users", userDTOs);
         response.setData(data);
         return ResponseEntity.ok(response);
     }

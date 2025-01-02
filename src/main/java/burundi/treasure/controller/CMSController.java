@@ -274,51 +274,20 @@ public class CMSController {
 						@RequestParam(defaultValue = "10") int size,
 						Model model) {
 
-//		Sort sort = Sort.by(Sort.Direction.DESC, "addTime");
-		
-		Page<LuckyHistory> luckyHistoriesUssd =
-				luckyService.findAllByAddTimeBetweenAndUser_PhoneContainingAndGiftTypeContaining(startDate, endDate, phone, giftType, PageRequest.of(page, size));
 
-		Page<User> users =
-				userService.findAllByTotalStarGreaterThanAndPhoneContainingOrderByTotalStarDesc(0L, phone, PageRequest.of(page, size));
-		for(LuckyHistory lh: luckyHistoriesUssd) {
-			try {
-//				lh.setGiftId(GiftService.gifts.get(lh.getGiftId()).getName());
-//				String originalXmlRequest = lh.getLumicashRequest();
-//				if(originalXmlRequest != null) {
-//					String request = originalXmlRequest.replace("<Input>", "").replace("</Input>", "");
-//					lh.setLumicashRequest(request);
-//				}
-//
-//
-//				String originalXmlResponse = lh.getLumicashResponse();
-//				if(originalXmlResponse != null) {
-//					int start = originalXmlResponse.indexOf("<responseCode>") + "<responseCode>".length();
-//					int end = originalXmlResponse.indexOf("</responseCode>");
-//					// Extract the value of <responseCode>
-//					if (end != -1 && start < end) {
-//						String responseCode = "Response Code:" + originalXmlResponse.substring(start, end);
-//						if(originalXmlResponse.contains(AnypayService.KEY_SUCCESSFULL_AUTHEN)
-//								&& originalXmlResponse.contains(AnypayService.KEY_SUCCESSFULL_EXECUTE)) {
-//							responseCode += "\n Successful";
-//						} else if(originalXmlResponse.contains(AnypayService.KEY_UNSUCCESSFULL_NOT_ENOUGH_EXECUTE)
-//								&& originalXmlResponse.contains(AnypayService.KEY_UNSUCCESSFULL_NOT_ENOUGH_MESSAGE)) {
-//							responseCode += "\n Unsuccessful! You do not have enough money in anypay account";
-//						} else {
-//							responseCode += "\n Unsuccessful!";
-//						}
-//
-//						lh.setLumicashResponse(responseCode);
-//					}
-//				}
-			} catch (Exception e) {
-				log.warn(e);
-			}
+
+		if(giftType.equals("CHARGE")) {
+			Page<MPSRequest> mpsRequests = mpsService.findAllByChargetTimeBetweenAndMsisdnContaining(startDate, endDate, phone, PageRequest.of(page, size));
+			model.addAttribute("mpsRequests", mpsRequests);
+		} else {
+			Page<LuckyHistory> luckyHistoriesUssd =
+					luckyService.findAllByAddTimeBetweenAndUser_PhoneContainingAndGiftTypeContaining(startDate, endDate, phone, giftType, PageRequest.of(page, size));
+			model.addAttribute("luckyHistoriesUssd", luckyHistoriesUssd);
+
 		}
-		Long totalPlay = userService.sumTotalPlayByPhone(phone);
 
-		model.addAttribute("users", users);
-		model.addAttribute("luckyHistoriesUssd", luckyHistoriesUssd);
+
+		Long totalPlay = userService.sumTotalPlayByPhone(phone);
 		model.addAttribute("startDate", startDate != null ? utils.formatDateYYYYMMDD(startDate) : null);
 		model.addAttribute("endDate", endDate != null ? utils.formatDateYYYYMMDD(endDate) : null);
 		model.addAttribute("phone", phone);

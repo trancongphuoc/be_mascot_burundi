@@ -14,6 +14,7 @@ import java.util.List;
 public class UserZodiacGameDTO extends UserDTO{
     private Long noBettingToday;
     private Long totalIcoinWinToday;
+    private Long totalIcoinWinMonthday;
     private List<ZodiacCardDTO> zodiacCards;
 
     public UserZodiacGameDTO(User user) {
