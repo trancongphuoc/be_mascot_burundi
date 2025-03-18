@@ -39,6 +39,7 @@ public class User {
     private String otp;
     
     private String lastTransactionId;
+    private String lastAction; // REGISTER_SP, CHARGE_SP
     
     @Column(name = "expired_otp")
     @Temporal(TemporalType.TIMESTAMP)
@@ -59,6 +60,7 @@ public class User {
 
 //    @JsonProperty("isPremium")
     private boolean isPremium;
+    private Boolean isPremiumSupperApp;
     
     @JsonProperty("isWin")
     private boolean isWin;

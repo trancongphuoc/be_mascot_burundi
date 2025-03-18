@@ -25,6 +25,7 @@ public class UserDTO {
     
 //    @JsonProperty("isPremium")
     private boolean isPremium;
+    private boolean isPremiumSupperApp;
     
     @JsonProperty("isWin")
     private boolean isWin;
@@ -59,6 +60,7 @@ public class UserDTO {
         this.totalStarMonth = user.getTotalStarMonth();
         this.isPremium = user.isPremium();
         this.isWin = user.isWin();
+        this.isPremiumSupperApp = user.getIsPremiumSupperApp() != null ? user.getIsPremiumSupperApp() : false;
         this.facebookUserId = String.valueOf(this.id);
     }
 }

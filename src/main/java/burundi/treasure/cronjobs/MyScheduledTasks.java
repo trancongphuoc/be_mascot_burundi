@@ -71,7 +71,7 @@ public class MyScheduledTasks {
     }
 
 
-    @Scheduled(cron = "0 0 8 1 * ?")
+//    @Scheduled(cron = "0 0 8 1 * ?")
     public void rewardTop3TotalStarMonth() throws Exception {
         log.info("rewardTop3TotalStarMonth");
         InetAddress inetAddress = InetAddress.getLocalHost();
@@ -230,15 +230,15 @@ public class MyScheduledTasks {
                 log.warn("Hệ thống đang bận.");
                 return;
             }
-            for(int i = 0; i < 3 && i < users.size(); i++) {
+            for(int i = 0; i < 9 && i < users.size(); i++) {
                 Gift gift;
-                if(i == 0) {
+                if(i < 3) {
                     content = "Turabakeje!Muri mu murwi wambere mubaronse ibiceri vyinshi kuwa %s. Mufise ibiceri %s. Mwaronse %sF";
                     gift = GiftService.gifts.get("FBU_1_D");
-                } else if(i == 1) {
+                } else if(i < 6) {
                     content = "Turabakeje!Muri mu murwi wa 2 wabaronse ibiceri vyinshi kuwa %s. Mufise ibiceri %s. Mwaronse %sF";
                     gift = GiftService.gifts.get("FBU_2_D");
-                } else if(i == 2) {
+                } else if(i < 9) {
                     content = "Turabakeje!Muri mu murwi wa 3 wabaronse ibiceri vyinshi kuwa %s. Mufise ibiceri %s. Mwaronse %sF";
                     gift = GiftService.gifts.get("FBU_3_D");
                 } else {
@@ -272,9 +272,9 @@ public class MyScheduledTasks {
                     luckyHistory.setStatus("ERROR");
                     log.warn(e);
                 }
-                content = String.format(content, formattedDate, user.getTotalStar(), gift.getNoItem());
-                String responseSendSms = mpsService.callApiSmsws(user.getPhone(), content);
-                log.info(responseSendSms);
+//                content = String.format(content, formattedDate, user.getTotalStar(), gift.getNoItem());
+//                String responseSendSms = mpsService.callApiSmsws(user.getPhone(), content);
+//                log.info(responseSendSms);
 
                 user.setWin(true);
                 userService.saveUser(user);

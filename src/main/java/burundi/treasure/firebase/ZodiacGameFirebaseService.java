@@ -95,9 +95,28 @@ public class ZodiacGameFirebaseService {
     }
 
 
+//    public void updateTotalIcoin(Long userId, Long remainingIcoin) {
+//        ZODIAC_GAME_REF.child(PLAYERS).child(userId.toString()).child(TOTAL_ICOIN).setValueAsync(remainingIcoin);
+//    }
+
     public void updateTotalIcoin(Long userId, Long remainingIcoin) {
-        ZODIAC_GAME_REF.child(PLAYERS).child(userId.toString()).child(TOTAL_ICOIN).setValueAsync(remainingIcoin);
+        DatabaseReference playerRef = ZODIAC_GAME_REF.child(PLAYERS).child(userId.toString());
+
+        playerRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    playerRef.child(TOTAL_ICOIN).setValueAsync(remainingIcoin);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                System.err.println("Error checking TOTAL_ICOIN node: " + databaseError.getMessage());
+            }
+        });
     }
+
 
     public void doNothing(Long userId) {
         DatabaseReference refZodiacGameUser = ZODIAC_GAME_REF.child(PLAYERS).child(userId.toString());

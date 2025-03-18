@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.logging.Level;
 
 @RestController
 @Log4j2
@@ -141,7 +142,7 @@ public class ZodiacGameController {
         Map<String, Object> data = new HashMap<>();
         try {
             User user = userService.findByUserName(userDetails.getUsername());
-
+            log.info("User betting: " + userDetails.getUsername());
             Long zodiacGameId = bettingRequest.getZodiacGameId();
             String zodiacCardIdBetting = bettingRequest.getZodiacCardId();
             Long totalIcoinBetting = bettingRequest.getTotalIcoin();

@@ -494,6 +494,25 @@ public class MPSService {
 		return mpsRequestRepository.save(mpsRequest);
 	}
 
+	public MPSRequest newMPSRequestSupperApp(User user, String action, String transactionId) {
+		MPSRequest mpsRequest = new MPSRequest();
+		mpsRequest.setAction(action);
+		if("CANCEL_SP".equals(action)) {
+			mpsRequest.setAmount(0);
+			mpsRequest.setParams("1");
+		} else {
+			mpsRequest.setAmount(0);
+			mpsRequest.setParams("0");
+		}
+		mpsRequest.setMsisdn(user.getPhone());
+		mpsRequest.setChargetTime(new Date());
+		mpsRequest.setStatus("NONE");
+		mpsRequest.setTransId(transactionId);
+		mpsRequest.setUser(user);
+
+		return mpsRequestRepository.save(mpsRequest);
+	}
+
 	public MPSRequest save(MPSRequest mpsRequest) {
 		return mpsRequestRepository.save(mpsRequest);
 	}

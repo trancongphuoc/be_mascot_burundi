@@ -66,7 +66,7 @@ public class WebSecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Cấu hình CORS
                 .csrf(AbstractHttpConfigurer::disable) // Tắt CSRF
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/","/log","/api/auth/*", "/Register", "/Cancel", "/Renew", "/Reward", "/PlayOneTime", "/api/admin/*", "/actuator/*","/api/user/*","/api/mascot/*").permitAll() // Cho phép các URL này truy cập tự do
+                        .requestMatchers("/","/log","/api/auth/*", "/Register", "/Cancel", "/Renew", "/Reward", "/PlayOneTime", "/api/admin/*", "/actuator/*","/api/user/*","/api/mascot/*","api/sp_app/*").permitAll() // Cho phép các URL này truy cập tự do
 
                         .anyRequest().authenticated() // Các URL khác yêu cầu xác thực
                 )

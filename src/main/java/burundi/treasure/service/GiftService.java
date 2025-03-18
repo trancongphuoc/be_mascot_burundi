@@ -27,9 +27,9 @@ public class GiftService {
     private static Long FBU_2_M = 20_000L;
     private static Long FBU_3_M = 5_000L;
 
-    private static Long FBU_1_D = 20_000L;
-    private static Long FBU_2_D = 5_000L;
-    private static Long FBU_3_D = 1_000L;
+    private static Long FBU_1_D = 50_000L;
+    private static Long FBU_2_D = 10_000L;
+    private static Long FBU_3_D = 5_000L;
 
     @PostConstruct
     public void init() {
