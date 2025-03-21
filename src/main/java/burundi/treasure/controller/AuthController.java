@@ -12,7 +12,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.extern.log4j.Log4j2;
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -97,7 +96,7 @@ public class AuthController {
 	}
 
 	@PostMapping("/verify_supper_app")
-	public ResponseEntity<?> verifySupperApp(@Valid @RequestBody VerifySupperApp verifySupperApp) {
+	public ResponseEntity<?> verifySupperApp(@Valid @RequestBody VerifySupperAppRequest verifySupperApp) {
 
 		Response response = new Response("FAILED","FAILED");
 		try {

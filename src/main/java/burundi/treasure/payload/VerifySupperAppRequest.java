@@ -7,7 +7,7 @@ import lombok.ToString;
 
 @Data
 @ToString
-public class VerifySupperApp {
+public class VerifySupperAppRequest {
 
 	@NotBlank
 	private String token;
