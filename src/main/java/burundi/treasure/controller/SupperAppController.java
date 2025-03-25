@@ -141,7 +141,7 @@ public class SupperAppController {
                     if("REGISTER_SP".equals(action)) {
                         if(amount > 0) {
                             user.setFirstRegister(true);
-                            user.setTotalPlay(user.getTotalPlay() + 5);
+                            user.setTotalPlay(user.getTotalPlay() + 1000);
                             user.setIsPremiumSupperApp(true);
                             userService.saveUser(user);
                             mpsRequest.setAmount(amount);
@@ -149,7 +149,7 @@ public class SupperAppController {
                         } else {
                             if(user.getFirstRegister() == null || !user.getFirstRegister()) {
                                 user.setFirstRegister(true);
-                                user.setTotalPlay(user.getTotalPlay() + 5);
+                                user.setTotalPlay(user.getTotalPlay() + 1000);
                             }
                             user.setIsPremiumSupperApp(true);
                             userService.saveUser(user);
@@ -158,7 +158,7 @@ public class SupperAppController {
                         }
                     } else if("CHARGE_SP".equals(action)) {
                         if(amount > 0) {
-                            user.setTotalPlay(user.getTotalPlay() + 5);
+                            user.setTotalPlay(user.getTotalPlay() + 1000);
                             userService.saveUser(user);
 
                             mpsRequest.setAmount(amount);
@@ -178,7 +178,7 @@ public class SupperAppController {
                     int amount = (int) jsonObject.getDouble("amount");
                     if(amount > 0) {
                         user.setIsPremiumSupperApp(true);
-                        user.setTotalPlay(user.getTotalPlay() + 5);
+                        user.setTotalPlay(user.getTotalPlay() + 1000);
                         userService.saveUser(user);
 
                         mpsRequest.setAmount(amount);

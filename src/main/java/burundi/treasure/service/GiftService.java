@@ -44,9 +44,9 @@ public class GiftService {
         FBU_2_M = Utils.getLong((configRepository.findById("FBU_2_M").map(Config::getCodeValue).orElse(null)), 20_000L);
         FBU_3_M = Utils.getLong((configRepository.findById("FBU_3_M").map(Config::getCodeValue).orElse(null)), 5_000L);
 
-        FBU_1_D = Utils.getLong((configRepository.findById("FBU_1_D").map(Config::getCodeValue).orElse(null)), 20_000L);
-        FBU_2_D = Utils.getLong((configRepository.findById("FBU_2_D").map(Config::getCodeValue).orElse(null)), 5_000L);
-        FBU_3_D = Utils.getLong((configRepository.findById("FBU_3_D").map(Config::getCodeValue).orElse(null)), 1_000L);
+        FBU_1_D = Utils.getLong((configRepository.findById("FBU_1_D").map(Config::getCodeValue).orElse(null)), 50_000L);
+        FBU_2_D = Utils.getLong((configRepository.findById("FBU_2_D").map(Config::getCodeValue).orElse(null)), 10_000L);
+        FBU_3_D = Utils.getLong((configRepository.findById("FBU_3_D").map(Config::getCodeValue).orElse(null)), 5_000L);
 
         Map<String, Double> probabilities = properties.getProbabilities();
 
