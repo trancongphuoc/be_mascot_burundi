@@ -230,17 +230,14 @@ public class MyScheduledTasks {
                 log.warn("Hệ thống đang bận.");
                 return;
             }
-            for(int i = 0; i < 9 && i < users.size(); i++) {
+            for(int i = 0; i < 22 && i < users.size(); i++) {
                 Gift gift;
-                if(i < 3) {
+                if(i == 0) {
                     content = "Turabakeje!Muri mu murwi wambere mubaronse ibiceri vyinshi kuwa %s. Mufise ibiceri %s. Mwaronse %sF";
                     gift = GiftService.gifts.get("FBU_1_D");
-                } else if(i < 6) {
+                } else if(i < 22) {
                     content = "Turabakeje!Muri mu murwi wa 2 wabaronse ibiceri vyinshi kuwa %s. Mufise ibiceri %s. Mwaronse %sF";
                     gift = GiftService.gifts.get("FBU_2_D");
-                } else if(i < 9) {
-                    content = "Turabakeje!Muri mu murwi wa 3 wabaronse ibiceri vyinshi kuwa %s. Mufise ibiceri %s. Mwaronse %sF";
-                    gift = GiftService.gifts.get("FBU_3_D");
                 } else {
                     log.error("Số lượng user nhận quà lớn hơn 3");
                     break;
