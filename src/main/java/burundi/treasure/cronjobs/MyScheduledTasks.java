@@ -71,7 +71,7 @@ public class MyScheduledTasks {
     }
 
 
-//    @Scheduled(cron = "0 0 8 1 * ?")
+    @Scheduled(cron = "0 0 0 1 * ?")
     public void rewardTop3TotalStarMonth() throws Exception {
         log.info("rewardTop3TotalStarMonth");
         InetAddress inetAddress = InetAddress.getLocalHost();
@@ -121,17 +121,14 @@ public class MyScheduledTasks {
         	log.warn("Hệ thống đang bận.");
         	return;
         }
-        for(int i = 0; i < 3 && i < users.size(); i++) {
+        for(int i = 0; i < 12 && i < users.size(); i++) {
             Gift gift;
             if(i == 0) {
                 content = "Turabakeje! Muri mu murwi wambere mubaronse ibiceri vyinshi mu kwa %s. Mufise ibiceri %s. Mwaronse %sF";
                 gift = GiftService.gifts.get("FBU_1_M");
-            } else if(i == 1) {
+            } else if(i < 12) {
                 content = "Turabakeje!Muri mu murwi wa 2 mubaronse ibiceri vyinshi mu kwa %s. Mufise ibiceri %s. Mwaronse %sF";
                 gift = GiftService.gifts.get("FBU_2_M");
-            } else if(i == 2) {
-                content = "Turabakeje!Muri mu murwi wa 3 mubaronse ibiceri vyinshi mu kwa %s. Mufise ibiceri %s. Mwaronse %sF";
-                gift = GiftService.gifts.get("FBU_3_M");
             } else {
                 log.error("Số lượng user nhận quà lớn hơn 3");
                 break;
@@ -162,9 +159,9 @@ public class MyScheduledTasks {
                 luckyHistory.setStatus("ERROR");
                 log.warn(e);
             }
-            content = String.format(content, formattedDate, user.getTotalStarMonth(), gift.getNoItem());
-        	String responseSendSms = mpsService.callApiSmsws(user.getPhone(), content);
-        	log.info(responseSendSms);
+//            content = String.format(content, formattedDate, user.getTotalStarMonth(), gift.getNoItem());
+//        	String responseSendSms = mpsService.callApiSmsws(user.getPhone(), content);
+//        	log.info(responseSendSms);
 
         	user.setWin(true);
         	userService.saveUser(user);

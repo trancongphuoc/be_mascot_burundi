@@ -103,6 +103,12 @@ public class AdminController {
         return ResponseEntity.ok("OK");
     }
 
+    @GetMapping("/send_sms_ussd")
+    public ResponseEntity<?> sendSmsUssd(@RequestParam String phone, @RequestParam String message) throws Exception {
+        String res = mpsService.callApiSmsUssd(phone, message);
+        return ResponseEntity.ok(res);
+    }
+
     @GetMapping("/delete_mps_request")
     public ResponseEntity<?> deleteMpsRequest() {
         Calendar calendar = Calendar.getInstance();

@@ -50,6 +50,14 @@ public class ConfigProperties {
 	@Value( "${smsws_short_code}" )
 	private String smswsShortCode;
 
+	@Value( "${sms_ussd_url}" )
+	private String smsUssdUrl;
+	@Value( "${sms_ussd_id}" )
+	private String smsUssdId;
+	@Value( "${sms_ussd_username}" )
+	private String smsUssdUsername;
+	@Value( "${sms_ussd_password}" )
+	private String smsUssdPassword;
 
 	@Value( "#{${probabilities}}" )
 	private Map<String, Double> probabilities = new HashMap<>();

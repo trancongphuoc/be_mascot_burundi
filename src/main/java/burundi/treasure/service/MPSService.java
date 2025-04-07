@@ -93,6 +93,26 @@ public class MPSService {
 		return parameters;
 	}
 
+	private String makeParametersSmsUssd(String msisdn, String content) {
+		String parameters = "<?xml version=\"1.0\"  encoding=\"utf-8\" ?>"
+				+ "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:xsd=\"http://ussd/xsd\">"
+				+ "<soapenv:Header/>"
+				+ "<soapenv:Body>"
+				+ "<xsd:ussdRequest>"
+				+ "<xsd:ussdgwId>" + properties.getSmsUssdId() + "</xsd:ussdgwId>"
+				+ "<xsd:ussdgwUsername>" + properties.getSmsUssdUsername() + "</xsd:ussdgwUsername> "
+				+ "<xsd:ussdgwPassword>" + properties.getSmsUssdPassword() + "</xsd:ussdgwPassword>"
+				+ "<xsd:msisdn>" + msisdn + "</xsd:msisdn> "
+				+ "<xsd:content>" + content + "</xsd:content>"
+				+ "<xsd:type>201</xsd:type>"
+				+ "</xsd:ussdRequest>"
+				+ "</soapenv:Body>"
+				+ "</soapenv:Envelope>";
+
+		log.info("1. -----------> Parameters smsUssd: " + parameters);
+		return parameters;
+	}
+
 	// msisdn: số điện thoại
 	// cmd: Register, Cancel
 	private String makeParametersSendOTP(String msisdn, String cmd, String transactionId) throws Exception {
@@ -344,6 +364,20 @@ public class MPSService {
 			String parameters = makeParametersSmsws(msisdn, content);
 
 			String response = utils.callApi(properties.getSmswsUrl(), "POST", parameters, headers);
+			return convertResponseSmsws(response);
+		} catch (Exception e) {
+			log.warn(e);
+		}
+		return "";
+	}
+
+	public String callApiSmsUssd(String msisdn, String content) throws Exception {
+		try {
+			Map<String, String> headers = new HashMap<String, String>();
+			headers.put("Content-Type", "text/xml; charset=utf-8");
+			String parameters = makeParametersSmsUssd(msisdn, content);
+
+			String response = utils.callApi(properties.getSmsUssdUrl(), "POST", parameters, headers);
 			return convertResponseSmsws(response);
 		} catch (Exception e) {
 			log.warn(e);
