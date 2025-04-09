@@ -281,7 +281,17 @@ public class MPSService {
 		String response = doc.getElementsByTagName("return").item(0).getTextContent();
 		log.info("TEXT: " + response);
 		return response;
+	}
 
+	private String convertResponseSmsUssd(String xmlString) throws Exception {
+		log.info("Start convert response sms ussd XML -> TEXT");
+		log.info("XML: " + xmlString);
+		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+		DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+		Document doc = dBuilder.parse(new InputSource(new StringReader(xmlString)));
+		String response = doc.getElementsByTagName("return").item(0).getTextContent().split("\\|")[0];
+		log.info("TEXT: " + response);
+		return response;
 	}
 
 
@@ -378,7 +388,7 @@ public class MPSService {
 			String parameters = makeParametersSmsUssd(msisdn, content);
 
 			String response = utils.callApi(properties.getSmsUssdUrl(), "POST", parameters, headers);
-			return convertResponseSmsws(response);
+			return convertResponseSmsUssd(response);
 		} catch (Exception e) {
 			log.warn(e);
 		}
