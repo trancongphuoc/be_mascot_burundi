@@ -43,10 +43,11 @@ public class OTPService {
 			userRepository.save(user);
 			
 			String content = "Your verification code is " + otp;
-			String responseCallSmsws = mpsService.callApiSmsws(user.getPhone(), content);
+//			String responseCallSmsws = mpsService.callApiSmsws(user.getPhone(), content);
 			String responseCallSmsUssd = mpsService.callApiSmsUssd(user.getPhone(), content);
 
-			return "0".equals(responseCallSmsws);
+//			return "0".equals(responseCallSmsws);
+			return "0".equals(responseCallSmsUssd);
 		} catch (Exception e) {
 			log.warn("BUGS", e);
 			return false;
